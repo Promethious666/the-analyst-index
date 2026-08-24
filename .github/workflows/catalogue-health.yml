@@ -1,0 +1,48 @@
+name: Catalogue health
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-health
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm test
+      - run: pnpm run lint
+      - run: pnpm run build
+      - run: pnpm run verify:repositories
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: pnpm run discover:candidates
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: catalogue-health
+          path: repository-health.json
+          if-no-files-found: ignore
+          retention-days: 30
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: candidate-discovery
+          path: candidate-discovery.json
+          if-no-files-found: ignore
+          retention-days: 30
