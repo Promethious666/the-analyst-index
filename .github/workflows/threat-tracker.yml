@@ -1,0 +1,75 @@
+name: Threat tracker
+
+on:
+  schedule:
+    - cron: "23 */4 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "public/threat-tracker/**"
+      - "docs/**"
+      - "scripts/collect-threats.py"
+      - "tests/*threat*"
+      - ".github/workflows/threat-tracker.yml"
+  pull_request:
+    paths:
+      - "public/threat-tracker/**"
+      - "docs/threat-tracker/**"
+      - "scripts/collect-threats.py"
+      - "tests/*threat*"
+      - ".github/workflows/threat-tracker.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: threat-tracker-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+      - name: Test tracker and collector
+        run: |
+          node --test tests/*.test.mjs
+          python3 -m unittest discover -s tests -p test_threat_collector.py
+      - name: Prepare fork preview snapshot
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: python3 scripts/collect-threats.py --offline
+      - name: Collect current public evidence
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/collect-threats.py --previous-url https://promethious666.github.io/the-analyst-index/threat-tracker/data.json
+      - name: Confirm live collection reached at least one source
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        run: python3 -c "import json; d=json.load(open('public/threat-tracker/data.json')); assert any(s['status']=='ok' for s in d['health']), 'All public source checks failed'"
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        if: github.event_name != 'pull_request'
+        with:
+          path: docs
+
+  publish:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the static site
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
