@@ -146,7 +146,8 @@
           "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicetvmsoftwarevulnerabilities-table",
           "reviewedAt": "2026-10-26"
         }
-      ]
+      ],
+      "fixStatus": "Available"
     },
     {
       "id": "CVE-2026-109618",
@@ -241,7 +242,8 @@
           "url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
           "reviewedAt": "2026-10-26"
         }
-      ]
+      ],
+      "fixStatus": "Available"
     },
     {
       "id": "CVE-2026-109619",
@@ -341,7 +343,8 @@
           "url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
           "reviewedAt": "2026-10-26"
         }
-      ]
+      ],
+      "fixStatus": "Available"
     },
     {
       "id": "CVE-2026-115560",
@@ -417,7 +420,8 @@
           "url": "https://www.php.net/archive/2026.php",
           "reviewedAt": "2026-10-26"
         }
-      ]
+      ],
+      "fixStatus": "Pending"
     }
   ]
 }

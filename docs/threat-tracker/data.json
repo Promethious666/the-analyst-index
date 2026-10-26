@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T19:50:16Z",
+  "generatedAt": "2026-10-26T20:19:07Z",
   "records": [
     {
       "id": "CVE-2026-111497",
@@ -100,6 +100,11 @@
           "title": "PHP Windows dependency rebuilds announced",
           "detail": "PHP reports updated Windows packages containing Brotli 1.2.1, exposing a related dependency investigation path.",
           "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -136,10 +141,11 @@
           "reviewedAt": "2026-10-26"
         }
       ],
+      "fixStatus": "Available",
       "live": {
         "leads": []
       },
-      "revision": "41e132ec4d0f31b7031e"
+      "revision": "a457b47835125519fdeb"
     },
     {
       "id": "CVE-2026-109618",
@@ -215,6 +221,11 @@
           "title": "PHP security releases and mitigation guidance published",
           "detail": "Fixed builds announced for PHP 8.2, 8.3, 8.4 and 8.5.",
           "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -235,10 +246,11 @@
           "reviewedAt": "2026-10-26"
         }
       ],
+      "fixStatus": "Available",
       "live": {
         "leads": []
       },
-      "revision": "60ebefdc05e923be6161"
+      "revision": "9c0ea5f8f2d718ece4b6"
     },
     {
       "id": "CVE-2026-109619",
@@ -319,6 +331,11 @@
           "title": "PHP publishes fixes and path-specific mitigations",
           "detail": "PHP distinguishes full remediation by update from partial configuration measures.",
           "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -339,10 +356,11 @@
           "reviewedAt": "2026-10-26"
         }
       ],
+      "fixStatus": "Available",
       "live": {
         "leads": []
       },
-      "revision": "2947554a997972d2e8b0"
+      "revision": "d51d4d5e9acaa498938b"
     },
     {
       "id": "CVE-2026-115560",
@@ -407,6 +425,11 @@
           "title": "Informational PHP advisory published",
           "detail": "PHP describes the prerequisites, temporary mitigation and planned regular-release handling.",
           "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -419,10 +442,11 @@
           "reviewedAt": "2026-10-26"
         }
       ],
+      "fixStatus": "Pending",
       "live": {
         "leads": []
       },
-      "revision": "156bd25b5ca04d5cd6c7"
+      "revision": "79acf0c4810d109e7395"
     }
   ],
   "health": [
