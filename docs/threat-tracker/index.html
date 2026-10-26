@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Follow vulnerability developments, inspect the evidence and export a clear technical report.">
+  <meta name="referrer" content="no-referrer">
+  <title>Threat Tracker | The Analyst Index</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to tracker</a>
+  <header class="masthead">
+    <a class="brand" href="../"><span class="mark" aria-hidden="true">TI</span><span>The Analyst Index<small>THREAT TRACKER</small></span></a>
+    <nav aria-label="Main"><a href="../">Tool directory</a><button id="method-button" class="text-button">How it works</button><a href="https://github.com/Promethious666/the-analyst-index" target="_blank" rel="noopener noreferrer">Source</a></nav>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">PUBLIC RESEARCH. PRACTICAL CONTEXT.</p><h1 id="page-title">Follow the evidence.<br><span>Keep the full picture.</span></h1><p class="lede">What changed, how exploitation works and what to check next. A working brief for every vulnerability you follow.</p></div>
+      <aside class="collection-status"><span class="status-label">COLLECTION STATUS</span><strong id="freshness">Loading evidence</strong><p id="collection-detail">Checking the latest published snapshot.</p><a href="#health">Inspect source health <span aria-hidden="true">↗</span></a></aside>
+    </section>
+    <section class="stats" aria-label="Tracker summary" id="stats"></section>
+    <section class="workspace" id="workspace">
+      <aside class="finder" aria-label="Find vulnerabilities">
+        <label for="search">Find a vulnerability</label><input id="search" type="search" placeholder="CVE, product or keyword" autocomplete="off">
+        <label for="product">Product</label><select id="product"><option value="">All products</option></select>
+        <label for="scope">Show</label><select id="scope"><option value="all">All tracked vulnerabilities</option><option value="followed">My watchlist</option><option value="changed">Changed since last visit</option></select>
+        <p class="small">Your watchlist stays in this browser. Nothing is sent to a server.</p>
+        <div class="finder-heading"><h2>Tracked vulnerabilities</h2><span id="result-count"></span></div>
+        <div id="records" class="record-list" aria-live="polite"></div>
+        <button id="reset-filters" class="quiet-button">Reset filters</button>
+      </aside>
+      <article id="brief" class="brief" aria-live="polite" aria-label="Vulnerability brief"><p class="empty">Loading the current snapshot…</p></article>
+    </section>
+    <section class="lower-grid">
+      <section class="panel" id="review"><div class="section-top"><p class="eyebrow">DISCOVERY</p><span class="tag">Awaiting review</span></div><h2>Related research queue</h2><p>New CVE references from monitored vendor pages. A shared source does not establish an exploit chain or a shared root cause.</p><div id="candidates"></div></section>
+      <section class="panel" id="health"><p class="eyebrow">TRANSPARENCY</p><h2>Source health</h2><p>A failed collection keeps the last successful evidence. Collection time and analyst review time are shown separately.</p><div id="health-list"></div></section>
+    </section>
+  </main>
+  <footer><span>The Analyst Index / Threat Tracker</span><span>Public evidence · Local watchlists · Free access</span><button id="clear-local" class="text-button">Clear local preferences</button></footer>
+  <dialog id="report-dialog" aria-labelledby="report-title"><form method="dialog" class="dialog-head"><h2 id="report-title">Export a technical report</h2><button class="icon-button" aria-label="Close report options">×</button></form><p id="report-description">Create a report from this published snapshot.</p><label for="report-scope">Report content</label><select id="report-scope"><option value="full">Full technical brief</option><option value="update">Changes since my previous export</option></select><label for="report-author">Prepared by (optional)</label><input id="report-author" maxlength="100" placeholder="Your name"><p class="small">Included in your download only. This name is not stored or uploaded.</p><div class="report-actions"><button id="export-word" class="primary-button">Download Word (.docx)</button><button id="export-pdf" class="quiet-button">Print / save PDF</button></div><p id="report-feedback" class="small" role="status"></p></dialog>
+  <dialog id="method-dialog" aria-labelledby="method-title"><form method="dialog" class="dialog-head"><h2 id="method-title">How this tracker works</h2><button class="icon-button" aria-label="Close methodology">×</button></form><p>Reviewed briefs describe public research. Scheduled collection checks CVE records, CISA's Known Exploited Vulnerabilities catalogue, EPSS and public repository references.</p><p>Automatic findings enter an unreviewed evidence section. They cannot rewrite a reviewed technical assessment or become a validated detection rule.</p><p>Repository mentions are leads, not proof that an exploit works. Absence from a catalogue does not establish that exploitation has not occurred.</p><p>Report exports preserve the evidence status, source dates and collection failures visible here. Organisational exposure remains not assessed.</p><p>Scheduled refreshes are best effort. Check source health and the last successful collection before relying on freshness.</p></dialog>
+  <p id="notice" class="notice" role="status" hidden></p>
+</body>
+</html>
