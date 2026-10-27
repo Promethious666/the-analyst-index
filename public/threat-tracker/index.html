@@ -19,7 +19,7 @@
   <main>
     <section class="page-heading" aria-labelledby="page-title">
       <div><h1 id="page-title">Dashboard</h1><p>Choose a vulnerability to see the latest information or download a report.</p></div>
-      <a class="update-status" href="#health"><strong id="freshness">Loading data</strong><span id="collection-detail"></span></a>
+      <div class="update-controls"><a class="update-status" href="#health"><strong id="freshness">Loading data</strong><span id="collection-detail"></span></a><button class="quiet-button" id="refresh-data">Check for updates</button></div>
     </section>
     <section class="stats" aria-label="Overview" id="stats"></section>
     <section class="toolbar" aria-label="Filter vulnerabilities">
@@ -37,7 +37,7 @@
       <article id="brief" class="brief" aria-label="Selected vulnerability"><p class="empty">Loading vulnerabilities...</p></article>
     </section>
     <section class="lower-grid">
-      <details class="panel" id="review"><summary><span>New CVEs to review</span><span id="candidate-count" class="count">0</span></summary><div class="panel-content"><p>These were mentioned by a monitored vendor. Any connection to the tracked vulnerabilities still needs checking.</p><div id="candidates"></div></div></details>
+      <details class="panel" id="review"><summary><span>New CVEs to review</span><span id="candidate-count" class="count">0</span></summary><div class="panel-content"><p>These CVEs appear in monitored sources or upstream reports. A co-mention does not establish a related flaw or exploit chain.</p><div id="candidates"></div></div></details>
       <details class="panel" id="health"><summary><span>Data sources</span><span id="health-count" class="count"></span></summary><div class="panel-content"><p>These checks collect new information. The date each technical brief was reviewed is shown separately.</p><div id="health-list"></div></div></details>
     </section>
   </main>
@@ -45,10 +45,10 @@
   <dialog id="report-dialog" aria-labelledby="report-title">
     <form method="dialog" class="dialog-head"><h2 id="report-title">Download report</h2><button class="icon-button" aria-label="Close report options">Close</button></form>
     <p id="report-description">Use the information currently shown on the dashboard.</p>
-    <label for="report-scope">Include</label><select id="report-scope"><option value="full">Full report</option><option value="update">Changes since my previous export</option></select>
+    <label for="report-scope">Include</label><select id="report-scope"><option value="brief">Simple summary report</option><option value="full">Full technical report</option><option value="update">Changes since my previous export</option></select>
     <label for="report-author">Prepared by (optional)</label><input id="report-author" maxlength="100" placeholder="Your name">
     <p class="small">This name is included in your download only.</p>
-    <div class="report-actions"><button id="export-word" class="primary-button">Download Word</button><button id="export-pdf" class="quiet-button">Print / save PDF</button></div>
+    <div class="report-actions"><button id="export-word" class="primary-button">Download Word</button><button id="export-pdf" class="quiet-button">Print / save PDF</button><button id="export-json" class="quiet-button">Download evidence JSON</button></div>
     <p id="report-feedback" class="small" role="status"></p>
   </dialog>
   <dialog id="method-dialog" aria-labelledby="method-title">
@@ -56,6 +56,7 @@
     <p>The dashboard combines reviewed technical notes with automatically collected information from public sources.</p>
     <p>New repository links and rules need checking. A link mentioning a CVE does not prove that an exploit works or that a rule will stop it.</p>
     <p>If a source cannot be reached, its earlier information is kept. Data sources shows when each check last succeeded.</p>
+    <p>While this page is visible, it checks for a new published snapshot every 15 minutes. The update button tells you when new data is available.</p>
     <p>Reports include the sources, review dates and any collection problems. They do not assess exposure in your own environment.</p>
     <p>Your followed vulnerabilities and report history are saved in this browser. You do not need an account.</p>
   </dialog>
