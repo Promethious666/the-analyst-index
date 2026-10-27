@@ -1,9 +1,10 @@
-import {escapeHtml as h,safeUrl,filterRecords,buildReport,reportHtml} from "./core.mjs";
+import {escapeHtml as h,safeUrl,filterRecords,buildReport,reportHtml,researchQueue,timelineEvents,timelineCsv,evidenceJson} from "./core.mjs";
 import {createDocx} from "./word.mjs";
+import {renderExploits,renderControls,renderTimeline,renderResearchGaps} from "./evidence-view.mjs";
 
 const $=selector=>document.querySelector(selector);
 const storageKey="threat-tracker-preferences-v1";
-const views=[["overview","Overview"],["changes","Changes"],["technical","Technical details"],["sources","Sources"]];
+const views=[["overview","Overview"],["exploits","Exploits"],["controls","Controls"],["timeline","Timeline"],["technical","Checks"],["sources","Sources"]];
 let saved={followed:[],seen:{},exports:{}};
 try {
   const value=JSON.parse(localStorage.getItem(storageKey)||"null");
@@ -11,6 +12,7 @@ try {
 } catch { /* Preferences are optional. */ }
 const seenOnArrival={...saved.seen};
 let snapshot=null,selected=null,activeView="overview",noticeTimer;
+let leadFilters={query:"",kind:"all",page:0,older:false},eventFilters={kind:"all",evidence:"reviewed"};
 
 function date(value) {
   if(!value||Number.isNaN(Date.parse(value)))return "Not recorded";
@@ -43,7 +45,7 @@ function renderStats() {
     [snapshot.records.length,"Tracked vulnerabilities"],
     [snapshot.records.filter(r=>r.fixStatus==="Available").length,"Fix available"],
     [snapshot.records.filter(r=>saved.followed.includes(r.id)).length,"Following"],
-    [snapshot.records.filter(changed).length,"Changed since last visit"]
+    [snapshot.records.reduce((n,r)=>n+researchQueue(r).leads.length,0),"Research links to review"]
   ];
   $("#stats").innerHTML=values.map(([count,label])=>`<div class="stat"><strong>${count}</strong><span>${h(label)}</span></div>`).join("");
 }
@@ -60,7 +62,7 @@ function renderWorkspace() {
 function select(id) {
   if(!snapshot.records.some(r=>r.id===id))return;
   if(!filterRecords(snapshot.records,currentFilters()).some(r=>r.id===id))resetFilters();
-  selected=id; activeView="overview"; renderWorkspace();
+  selected=id; activeView="overview"; leadFilters={query:"",kind:"all",page:0,older:false};eventFilters={kind:"all",evidence:"reviewed"};renderWorkspace();
 }
 function renderBrief() {
   const r=snapshot.records.find(r=>r.id===selected);
@@ -73,22 +75,19 @@ function renderBrief() {
   const kevStatus=live.kev?.checkedAt?(live.kev.listed?"Listed by CISA":"Not listed by CISA"):"Not checked yet";
   const kevNote=live.kev?.checkedAt?`<p>CISA's known-exploited catalogue: ${live.kev.listed?"listed":"not listed"}, checked ${h(date(live.kev.checkedAt))}. An unlisted CVE can still be exploited.</p>`:"";
   const risk=live.epss?`<p>EPSS estimates a ${(Number(live.epss.score)*100).toFixed(2)}% chance of exploitation over the next 30 days. Score dated ${h(live.epss.date)}. This is a prediction.</p>`:"";
-  const overview=`<p>${h(r.summary)}</p><div class="next-action"><strong>What to do next</strong><p>${h(r.nextAction)}</p></div>${section("Versions and fixes",versions)}${section("Attack information",`<p>${h(r.exploitation.detail)}</p>${kevNote}${risk}`)}${section("Fixes and workarounds",mitigations)}`;
-  const timeline=`<ol class="timeline">${[...(r.history||[])].reverse().map(e=>`<li><time datetime="${h(e.at)}">${h(date(e.at))}</time><strong>${h(e.title)}</strong><p>${h(e.detail||"")}${e.url?` ${link(e.url,"Read source")}`:""}</p></li>`).join("")}</ol>`;
+  const overview=`<p>${h(r.summary)}</p><div class="next-action"><strong>What to do next</strong><p>${h(r.nextAction)}</p></div>${renderResearchGaps(r)}${section("Versions and fixes",versions)}${section("Attack information",`<p>${h(r.exploitation.detail)}</p>${kevNote}${risk}`)}${section("Fixes and workarounds",mitigations)}`;
   const checks=r.detections.map((d,i)=>`<section class="brief-section"><h3>${h(d.title)}</h3><span class="tag neutral">${h(d.status)}</span><p><strong>Needs:</strong> ${h(d.requirements)}<br><strong>Limit:</strong> ${h(d.limitation)}</p>${d.query?`<pre class="code-block"><code>${h(d.query)}</code></pre><button class="quiet-button" data-copy-query="${i}">Copy query</button>`:""}</section>`).join("");
   const related=r.related.length?r.related.map(x=>`<div class="source"><strong>${h(x.id)}</strong><p>${h(x.relationship)}</p>${link(x.source,"Read source")}${snapshot.records.some(t=>t.id===x.id)?` / <button class="text-button" data-select="${h(x.id)}">Open vulnerability</button>`:""}</div>`).join(""):"<p>No confirmed connections recorded.</p>";
-  const leads=(live.leads||[]).map(x=>`<div class="source">${link(x.url,x.title)}<span class="meta">${h(x.kind)} / Needs checking / Found ${h(date(x.firstSeen))}</span></div>`).join("");
   const references=(live.references||[]).map(url=>`<div class="source">${link(url,url)}<span class="meta">CVE record reference / Needs checking</span></div>`).join("");
   const technical=fold("How the attack works",`<p>${h(r.technical)}</p>${list(r.requirements)}`)
     +fold("Checks and queries",checks)
-    +fold("IOCs",r.iocs.length?list(r.iocs.map(i=>`${i.value}: ${i.context}. Source: ${i.source}`)):'<p>No confirmed CVE-specific indicators are recorded. A crash or a generic process event alone does not prove exploitation.</p>')
-    +fold("Related vulnerabilities",related)
-    +fold(`Exploit and rule links (${(live.leads||[]).length})`,`<p class="warning">These links need checking. A matching repository is not a verified exploit. A matching rule is not proof of protection.</p>${leads||"<p>No links collected yet.</p>"}`);
+    +fold("IOCs",`<p>${h(r.indicatorAssessment?.summary||"No confirmed CVE-specific indicators are recorded.")}</p><p class="small">${h(r.indicatorAssessment?.limitation||"A crash or generic process event does not prove exploitation.")}</p>${r.iocs.length?list(r.iocs.map(i=>`${i.value}: ${i.context}. Source: ${i.source}`)):""}`)
+    +fold("Related vulnerabilities",related);
   const sourceView=sources+(references?`<details class="technical-item"><summary>Other references (${(live.references||[]).length})</summary>${references}</details>`:"")+`<p class="small">Technical notes reviewed: ${h(date(r.reviewedAt))}. Automatic update: ${h(date(snapshot.generatedAt))}.</p>`;
-  const panels={overview,changes:timeline,technical,sources:sourceView};
-  $("#brief").innerHTML=`<header class="brief-header"><div class="brief-title-row"><div><p class="brief-id">${h(r.id)} / ${h(r.product)}</p><h2>${h(r.title)}</h2><p class="review-date">Reviewed ${h(date(r.reviewedAt))}</p></div><div class="header-actions"><button id="follow" class="quiet-button" aria-pressed="${follows}">${follows?"Following":"Follow"}</button><button id="open-report" class="primary-button">Download report</button></div></div></header><div class="key-facts"><div class="key-fact"><span>Severity</span><strong>${h(r.severity)}</strong></div><div class="key-fact"><span>Exploit evidence</span><strong>${h(r.exploitation.status)}</strong></div><div class="key-fact"><span>Known exploitation</span><strong>${h(kevStatus)}</strong></div></div><div class="tabs" role="tablist" aria-label="Vulnerability information">${views.map(([id,label])=>`<button role="tab" id="tab-${id}" data-view="${id}" aria-controls="panel-${id}" aria-selected="${activeView===id}" tabindex="${activeView===id?0:-1}">${label}</button>`).join("")}</div>${views.map(([id])=>`<div class="tab-panel" role="tabpanel" id="panel-${id}" aria-labelledby="tab-${id}" ${activeView!==id?"hidden":""}>${panels[id]}</div>`).join("")}`;
+  const panels={overview,exploits:renderExploits(r,leadFilters),controls:renderControls(r),timeline:renderTimeline(r,eventFilters),technical,sources:sourceView};
+  $("#brief").innerHTML=`<header class="brief-header"><div class="brief-title-row"><div><p class="brief-id">${h(r.id)} / ${h(r.product)}</p><h2>${h(r.title)}</h2><p class="review-date">Reviewed ${h(date(r.reviewedAt))}</p></div><div class="header-actions"><button id="follow" class="quiet-button" aria-pressed="${follows}">${follows?"Following":"Follow"}</button><button id="open-report" class="primary-button">Download report</button></div></div></header><div class="key-facts"><div class="key-fact"><span>Severity</span><strong>${h(r.severity)}</strong></div><div class="key-fact"><span>Exploit evidence</span><strong>${h(r.exploitation.status)}</strong></div><div class="key-fact"><span>CISA KEV</span><strong>${h(kevStatus)}</strong></div></div><div class="tabs" role="tablist" aria-label="Vulnerability information">${views.map(([id,label])=>`<button role="tab" id="tab-${id}" data-view="${id}" aria-controls="panel-${id}" aria-selected="${activeView===id}" tabindex="${activeView===id?0:-1}">${label}</button>`).join("")}</div>${views.map(([id])=>`<div class="tab-panel" role="tabpanel" id="panel-${id}" aria-labelledby="tab-${id}" ${activeView!==id?"hidden":""}>${panels[id]}</div>`).join("")}`;
   $("#follow").addEventListener("click",()=>{saved.followed=follows?saved.followed.filter(id=>id!==r.id):[...saved.followed,r.id];persist();renderWorkspace();});
-  $("#open-report").addEventListener("click",()=>{$("#report-author").value="";$("#report-scope").value="full";$("#report-feedback").textContent="";$("#report-description").textContent=`${r.id}: ${r.title}`;$("#report-dialog").showModal();});
+  $("#open-report").addEventListener("click",()=>{$("#report-author").value="";$("#report-scope").value="brief";$("#report-feedback").textContent="";$("#report-description").textContent=`${r.id}: ${r.title}`;$("#report-dialog").showModal();});
 }
 function showView(id) {
   if(!views.some(([view])=>view===id))return;
@@ -101,6 +100,14 @@ function showView(id) {
   }
   $(`#tab-${id}`).focus();
 }
+function download(content,type,filename) {
+  const url=URL.createObjectURL(new Blob([content],{type})),anchor=document.createElement("a");
+  anchor.href=url;anchor.download=filename;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function refreshEvidencePanel(panel) {
+  const record=snapshot.records.find(r=>r.id===selected);
+  $(`#panel-${panel}`).innerHTML=panel==="timeline"?renderTimeline(record,eventFilters):renderExploits(record,leadFilters);
+}
 function renderSnapshot() {
   const health=snapshot.health||[],success=health.filter(s=>s.status==="ok"),errors=health.filter(s=>s.status==="error");
   const stale=success.some(s=>Date.now()-Date.parse(s.lastSuccess)>12*3600000);
@@ -111,7 +118,7 @@ function renderSnapshot() {
   $("#health-list").innerHTML=health.map(s=>`<div class="health-row" data-state="${h(s.status)}"><strong>${h(s.name)} / ${h(s.status==="ok"?"Checked":s.status==="error"?"Unavailable":"Not checked yet")}</strong><span>Last successful check: ${h(date(s.lastSuccess))}${s.error?`<br>${h(s.error)}`:""}</span></div>`).join("");
   const candidates=snapshot.candidates||[];
   $("#candidate-count").textContent=String(candidates.length);
-  $("#candidates").innerHTML=candidates.slice(0,30).map(c=>`<div class="candidate-row"><strong>${link(c.url,c.id)}</strong><span>${h(c.product)} / Connection needs checking. Found ${h(date(c.firstSeen))}</span></div>`).join("")||"<p>No new CVEs found yet.</p>";
+  $("#candidates").innerHTML=candidates.slice(0,30).map(c=>`<div class="candidate-row"><strong>${link(c.url,c.id)}</strong><span>${h(c.product)} / ${h(c.relationship)}. Found ${h(date(c.firstSeen))}${c.relatedTo?.length?` / Co-mentioned with ${h(c.relatedTo.join(", "))}`:""}</span></div>`).join("")||"<p>No new CVEs found yet.</p>";
   let hash=""; try { hash=decodeURIComponent(location.hash.slice(1)); } catch { /* Invalid links fall back to the first record. */ }
   selected=snapshot.records.some(r=>r.id===hash)?hash:snapshot.records[0]?.id;
   renderWorkspace();
@@ -121,12 +128,27 @@ document.addEventListener("click",async event=>{
   const target=event.target;
   const selectButton=target.closest("[data-select]"); if(selectButton)select(selectButton.dataset.select);
   const tab=target.closest("[data-view]"); if(tab)showView(tab.dataset.view);
+  const pageButton=target.closest("[data-lead-page]");if(pageButton){leadFilters.page=Math.max(0,Number(pageButton.dataset.leadPage));refreshEvidencePanel("exploits");}
+  const eventPage=target.closest("[data-event-page]");if(eventPage){eventFilters.page=Math.max(0,Number(eventPage.dataset.eventPage));refreshEvidencePanel("timeline");}
+  if(target.closest("#export-timeline"))download(timelineCsv(timelineEvents(snapshot.records.find(r=>r.id===selected),eventFilters)),"text/csv;charset=utf-8",`${selected}-timeline.csv`);
+  const controlButton=target.closest("[data-copy-control]");
+  if(controlButton){try{await navigator.clipboard.writeText(snapshot.records.find(r=>r.id===selected).controls[Number(controlButton.dataset.copyControl)].query);notice("Candidate copied. Review its scope and validation plan before use.");}catch{notice("Select and copy the visible candidate.");}}
   const copyButton=target.closest("[data-copy-query]");
   if(copyButton) {
     const r=snapshot.records.find(r=>r.id===selected);
     try { await navigator.clipboard.writeText(r.detections[Number(copyButton.dataset.copyQuery)].query); notice("Query copied."); }
     catch { notice("Clipboard access is unavailable. Select and copy the visible query."); }
   }
+});
+document.addEventListener("change",event=>{
+  const id=event.target.id;
+  if(id==="timeline-kind"||id==="timeline-evidence"){eventFilters[id==="timeline-kind"?"kind":"evidence"]=event.target.value;eventFilters.page=0;refreshEvidencePanel("timeline");$(`#${id}`).focus();}
+  if(id==="lead-kind"||id==="lead-older"||id==="lead-broad"){leadFilters[id==="lead-kind"?"kind":id==="lead-broad"?"broad":"older"]=id==="lead-kind"?event.target.value:event.target.checked;leadFilters.page=0;refreshEvidencePanel("exploits");$(`#${id}`).focus();}
+});
+document.addEventListener("input",event=>{
+  if(event.target.id!=="lead-search")return;
+  const start=event.target.selectionStart,end=event.target.selectionEnd;
+  leadFilters.query=event.target.value;leadFilters.page=0;refreshEvidencePanel("exploits");$("#lead-search").focus();$("#lead-search").setSelectionRange(start,end);
 });
 document.addEventListener("keydown",event=>{
   const tab=event.target.closest("[data-view]");
@@ -158,6 +180,11 @@ for(const id of ["#export-word","#export-pdf"])$(id).addEventListener("click",()
     win.opener=null;win.document.write(reportHtml(report));win.document.close();
     $("#report-feedback").textContent="Report opened. Choose Print / save PDF in that tab. Your previous Word-export baseline is unchanged.";
   }
+});
+$("#export-json").addEventListener("click",()=>{
+  const record=snapshot.records.find(r=>r.id===selected);
+  download(evidenceJson(record,snapshot,{scope:$("#report-scope").value,previousExport:saved.exports[record.id]}),"application/json",`${record.id}-evidence.json`);
+  $("#report-feedback").textContent="Evidence download requested. Your Word-export baseline is unchanged.";
 });
 try {
   const response=await fetch("./data.json",{cache:"no-cache"});
