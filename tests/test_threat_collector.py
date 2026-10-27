@@ -90,7 +90,11 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(after[0]["firstSeen"],NOW)
 
     def test_upstream_claim_never_becomes_confirmed_exploitation(self):
-        value = collector.collect(BRIEFS, fetch=fixture_fetch, now=NOW)
+        def bounded(url, **kwargs):
+            if "vulnerability.circl.lu" in url:
+                self.assertEqual(kwargs.get("limit"),8_000_000)
+            return fixture_fetch(url,**kwargs)
+        value = collector.collect(BRIEFS, fetch=bounded, now=NOW)
         record = value["records"][0]
         self.assertEqual(record["exploitation"],BRIEFS["records"][0]["exploitation"])
         event = record["live"]["timeline"][0]

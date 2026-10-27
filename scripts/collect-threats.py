@@ -315,7 +315,7 @@ def collect(briefs, previous=None, offline=False, fetch=request, now=None):
         live["leads"] = merge_leads(old_leads, leads, now)
         live["leadCoverage"] = f"{len(set(x['url'].rstrip('/').lower() for x in leads))} distinct links returned by the retained source snapshots. Up to 250 active and historical links are kept. Search and filename matches are not exhaustive. " + live.get("indexCoverage", "")
         def upstream_timeline():
-            value = fetch(f"https://vulnerability.circl.lu/api/vulnerability/{record_id}/timeline", limit=2_000_000)
+            value = fetch(f"https://vulnerability.circl.lu/api/vulnerability/{record_id}/timeline", limit=8_000_000)
             return parse_upstream_timeline(value, record_id, live.get("timeline", []), now)
         timeline = check(f"CIRCL timeline: {record_id}", upstream_timeline)
         if timeline is not None:
