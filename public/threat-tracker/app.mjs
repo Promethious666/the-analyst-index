@@ -13,6 +13,7 @@ try {
 const seenOnArrival={...saved.seen};
 let snapshot=null,selected=null,activeView="overview",noticeTimer;
 let leadFilters={query:"",kind:"all",page:0,older:false},eventFilters={kind:"all",evidence:"reviewed"};
+let snapshotTag="",refreshing=false,lastUpdateCheck=0;
 
 function date(value) {
   if(!value||Number.isNaN(Date.parse(value)))return "Not recorded";
@@ -109,11 +110,13 @@ function refreshEvidencePanel(panel) {
   $(`#panel-${panel}`).innerHTML=panel==="timeline"?renderTimeline(record,eventFilters):renderExploits(record,leadFilters);
 }
 function renderSnapshot() {
+  const currentProduct=$("#product").value;
   const health=snapshot.health||[],success=health.filter(s=>s.status==="ok"),errors=health.filter(s=>s.status==="error");
   const stale=success.some(s=>Date.now()-Date.parse(s.lastSuccess)>12*3600000);
   $("#freshness").textContent=errors.length?`${errors.length} source check${errors.length===1?"":"s"} unavailable`:!success.length?"Automatic updates not started":stale?"Updates are overdue":"Up to date";
   $("#collection-detail").textContent=success.length?`Last update: ${date(snapshot.generatedAt)}`:"Showing reviewed starting data";
   $("#product").innerHTML='<option value="">All products</option>'+[...new Set(snapshot.records.map(r=>r.product))].sort().map(p=>`<option value="${h(p)}">${h(p)}</option>`).join("");
+  if(snapshot.records.some(r=>r.product===currentProduct))$("#product").value=currentProduct;
   $("#health-count").textContent=success.length?`${success.length}/${health.length} checked`:"Not started";
   $("#health-list").innerHTML=health.map(s=>`<div class="health-row" data-state="${h(s.status)}"><strong>${h(s.name)} / ${h(s.status==="ok"?"Checked":s.status==="error"?"Unavailable":"Not checked yet")}</strong><span>Last successful check: ${h(date(s.lastSuccess))}${s.error?`<br>${h(s.error)}`:""}</span></div>`).join("");
   const candidates=snapshot.candidates||[];
@@ -186,10 +189,38 @@ $("#export-json").addEventListener("click",()=>{
   download(evidenceJson(record,snapshot,{scope:$("#report-scope").value,previousExport:saved.exports[record.id]}),"application/json",`${record.id}-evidence.json`);
   $("#report-feedback").textContent="Evidence download requested. Your Word-export baseline is unchanged.";
 });
+const responseTag=response=>response.headers.get("etag")||response.headers.get("last-modified")||"";
+async function checkForUpdate() {
+  if(document.hidden||refreshing||Date.now()-lastUpdateCheck<5*60000)return;
+  lastUpdateCheck=Date.now();
+  try {
+    const response=await fetch("./data.json",{method:"HEAD",cache:"no-cache"});
+    const tag=responseTag(response);
+    if(response.ok&&snapshotTag&&tag&&tag!==snapshotTag){$("#refresh-data").textContent="Update dashboard";$("#refresh-data").classList.add("primary-button");}
+  } catch { /* Keep the current snapshot and allow a manual retry. */ }
+}
+$("#refresh-data").addEventListener("click",async()=>{
+  if(refreshing)return;
+  if(document.querySelector("dialog[open]")){notice("Close the report options before updating the dashboard.");return;}
+  refreshing=true;$("#refresh-data").disabled=true;
+  const scroll=window.scrollY;
+  try {
+    const response=await fetch("./data.json",{cache:"no-cache"});
+    if(!response.ok)throw new Error("Snapshot unavailable");
+    const value=await response.json();
+    if(value.schemaVersion!==1||!Array.isArray(value.records)||!value.records.length)throw new Error("Unsupported snapshot");
+    snapshot=value;snapshotTag=responseTag(response);renderSnapshot();window.scrollTo({top:scroll});
+    $("#refresh-data").textContent="Check for updates";$("#refresh-data").classList.remove("primary-button");notice("Dashboard updated.");
+  } catch { notice("Could not update. The current information has been kept."); }
+  finally {refreshing=false;$("#refresh-data").disabled=false;}
+});
+setInterval(checkForUpdate,15*60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkForUpdate();});
 try {
   const response=await fetch("./data.json",{cache:"no-cache"});
   if(!response.ok)throw new Error(`Request returned ${response.status}`);
   snapshot=await response.json();
+  snapshotTag=responseTag(response);
   if(snapshot.schemaVersion!==1||!Array.isArray(snapshot.records)||!snapshot.records.length)throw new Error("Unsupported or empty data");
   renderSnapshot();
 } catch(error) {
