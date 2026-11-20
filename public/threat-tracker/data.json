@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-26T20:19:07Z",
+  "generatedAt": "2026-10-27T10:38:11Z",
   "records": [
     {
       "id": "CVE-2026-111497",
@@ -87,24 +87,50 @@
           "at": "2026-10-21",
           "title": "Node.js security releases published",
           "detail": "Vendor fixes released for the supported 22, 24 and 26 branches.",
-          "url": "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases"
+          "url": "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+          "kind": "patch",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-22",
           "title": "Researcher publishes exploitation analysis",
           "detail": "Imperva describes request and external-response attack paths and researcher-demonstrated code execution.",
-          "url": "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/"
+          "url": "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/",
+          "kind": "research",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-26",
           "title": "PHP Windows dependency rebuilds announced",
           "detail": "PHP reports updated Windows packages containing Brotli 1.2.1, exposing a related dependency investigation path.",
-          "url": "https://www.php.net/archive/2026.php"
+          "url": "https://www.php.net/archive/2026.php",
+          "kind": "advisory",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-26T20:19:07Z",
           "title": "Reviewed technical brief changed",
-          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+          "detail": "The published technical assessment was updated; inspect the current brief and sources.",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-26T21:11:09Z",
+          "firstSeen": "2026-10-26T21:11:09Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
+        },
+        {
+          "at": "2026-10-26T21:16:55Z",
+          "firstSeen": "2026-10-26T21:16:55Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -139,13 +165,146 @@
           "type": "Schema documentation",
           "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicetvmsoftwarevulnerabilities-table",
           "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "research-4",
+          "title": "Exact-profile Node.js lab PoC",
+          "url": "https://github.com/dimasma0305/CVE-2026-111497-POC/tree/452151d4945c3f5d9b58d9d25792d0d8aef4ab16",
+          "publisher": "dimasma0305",
+          "type": "Pinned documentation review",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-5",
+          "title": "AWS WAF incoming Brotli candidate evidence",
+          "url": "https://docs.aws.amazon.com/waf/latest/APIReference/API_RegexMatchStatement.html",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-6",
+          "title": "Review web-worker child shells evidence",
+          "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
         }
       ],
       "fixStatus": "Available",
-      "live": {
-        "leads": []
+      "exploits": [
+        {
+          "title": "Imperva code-execution research",
+          "url": "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/",
+          "publisher": "Imperva Threat Research",
+          "category": "Research demonstration",
+          "environment": "Official Node.js 24.22.0 Linux arm64 image; built-in fetch and configured request parsers.",
+          "behaviour": "Researcher reports code execution through untrusted Brotli request bodies and consumed external responses. Matching input was rejected by 24.22.1.",
+          "requirements": "The application must actually pass untrusted data to the native Brotli decoder.",
+          "limitations": "Multiple attempts were needed. This does not establish reliability on every platform. No downloadable exploit link is supplied in the article.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": "2026-10-22",
+          "reviewStatus": "Documentation reviewed; not independently reproduced"
+        },
+        {
+          "title": "Exact-profile Node.js lab PoC",
+          "url": "https://github.com/dimasma0305/CVE-2026-111497-POC/tree/452151d4945c3f5d9b58d9d25792d0d8aef4ab16",
+          "publisher": "dimasma0305",
+          "category": "Public PoC",
+          "environment": "Three specific Linux x86-64 lab profiles; Express profile pins Node.js 24.22.0 and body-parser 2.4.0.",
+          "behaviour": "Author reports code execution in three exact profiles and denial of service in additional profiles.",
+          "requirements": "Express result relies on an exact binary, one libuv worker, socket fd 19, a restart supervisor and a probabilistic address guess.",
+          "limitations": "Results labelled denial of service must not be promoted to code execution. The experimental response signature matches reflected id output and is not general exploit coverage. Only the pinned README was reviewed.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": null,
+          "reviewStatus": "Documentation reviewed; not independently reproduced",
+          "commitSha": "452151d4945c3f5d9b58d9d25792d0d8aef4ab16",
+          "repositoryUrl": "https://github.com/dimasma0305/CVE-2026-111497-POC"
+        }
+      ],
+      "controls": [
+        {
+          "title": "Replace the deployed runtime",
+          "kind": "Vendor fix",
+          "paths": [
+            "Incoming decompression",
+            "Consumed external responses"
+          ],
+          "coverage": "Node.js fixes: 22.23.4, 24.22.1 and 26.12.1.",
+          "limitation": "Check the binary inside each image, function and application bundle.",
+          "validation": "Vendor advisory reviewed; researcher reports a vulnerable-versus-fixed comparison.",
+          "sourceUrls": [
+            "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+            "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/"
+          ]
+        },
+        {
+          "title": "Restrict untrusted Brotli paths",
+          "kind": "Partial mitigation",
+          "paths": [
+            "Explicitly constrained request or response path"
+          ],
+          "coverage": "Can prevent compressed data reaching the decoder on that path.",
+          "limitation": "An incoming header rule does not inspect a separate external response fetched by the application. Review each decompression entry point.",
+          "validation": "Architecture assessment based on the research; no workload test recorded.",
+          "sourceUrls": [
+            "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/"
+          ]
+        },
+        {
+          "title": "AWS WAF incoming Brotli candidate",
+          "kind": "Candidate request rule",
+          "paths": [
+            "Incoming Content-Encoding header only"
+          ],
+          "coverage": "Matches a br token in an incoming Content-Encoding list. The example counts matches for evaluation.",
+          "limitation": "This is not a payload detector. It does not cover direct decoder calls, unlabelled data or fetched external responses. Priority and scope require adaptation.",
+          "validation": "AWS statement syntax reviewed. JSON parses and token matching is unit checked; no AWS deployment or exploit-blocking test recorded.",
+          "sourceUrls": [
+            "https://docs.aws.amazon.com/waf/latest/APIReference/API_RegexMatchStatement.html",
+            "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/"
+          ],
+          "language": "AWS WAF JSON",
+          "query": "{\n  \"Name\": \"ReviewBrotliRequests\",\n  \"Priority\": 100,\n  \"Statement\": {\n    \"RegexMatchStatement\": {\n      \"RegexString\": \"(^|,)[ \\\\t]*br[ \\\\t]*(,|$)\",\n      \"FieldToMatch\": {\n        \"SingleHeader\": {\n          \"Name\": \"content-encoding\"\n        }\n      },\n      \"TextTransformations\": [\n        {\n          \"Priority\": 0,\n          \"Type\": \"LOWERCASE\"\n        }\n      ]\n    }\n  },\n  \"Action\": {\n    \"Count\": {}\n  },\n  \"VisibilityConfig\": {\n    \"SampledRequestsEnabled\": false,\n    \"CloudWatchMetricsEnabled\": true,\n    \"MetricName\": \"ReviewBrotliRequests\"\n  }\n}",
+          "testPlan": "Use a test ACL and benign compressed requests. Check case, whitespace, coding lists, duplicate headers and legitimate traffic. Verify the external-response path separately. Select Block only after assessing compatibility and confirming enforcement."
+        },
+        {
+          "title": "Review web-worker child shells",
+          "kind": "Candidate hunting query",
+          "paths": [
+            "Child-process telemetry after possible execution"
+          ],
+          "coverage": "Finds selected shells launched by monitored web runtimes.",
+          "limitation": "Generic behaviour with legitimate matches. It can miss execution without a child shell. It neither identifies this CVE nor blocks exploitation.",
+          "validation": "Schema checked against Defender documentation. Query has not run against live tenant data.",
+          "sourceUrls": [
+            "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table"
+          ],
+          "language": "Defender KQL",
+          "query": "DeviceProcessEvents\n| where Timestamp > ago(7d)\n| where InitiatingProcessFileName in~ (\"node\", \"node.exe\")\n| where FileName in~ (\"sh\", \"bash\", \"dash\", \"zsh\", \"cmd.exe\", \"powershell.exe\", \"pwsh.exe\")\n| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine, AccountName, ReportId\n| order by Timestamp desc",
+          "testPlan": "Run against representative telemetry. Baseline legitimate child processes, test benign authorised shell launches and document false positives and missing telemetry."
+        }
+      ],
+      "openQuestions": [
+        "Map incoming parsers, fetched responses and direct decoder use.",
+        "Check whether a candidate PoC matches the actual build and architecture.",
+        "Validate each control on the path it is intended to cover."
+      ],
+      "indicatorAssessment": {
+        "summary": "No confirmed CVE-specific compromise indicators were found in the primary sources reviewed.",
+        "limitation": "This records the review scope, not proof that no indicators exist. Lab addresses, reflected id output, crashes and generic shell activity are not confirmed campaign indicators.",
+        "reviewedAt": "2026-10-26",
+        "sourceUrls": [
+          "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/",
+          "https://github.com/dimasma0305/CVE-2026-111497-POC/tree/452151d4945c3f5d9b58d9d25792d0d8aef4ab16"
+        ]
       },
-      "revision": "a457b47835125519fdeb"
+      "live": {
+        "leads": [],
+        "leadSources": {},
+        "leadCoverage": "0 distinct links returned by the retained source snapshots. Up to 250 active and historical links are kept. Search and filename matches are not exhaustive. "
+      },
+      "revision": "5e9f6e7fe7bed98a2d72"
     },
     {
       "id": "CVE-2026-109618",
@@ -175,7 +334,7 @@
       ],
       "exploitation": {
         "status": "Vendor reports demonstrated exploit",
-        "detail": "PHP reports a demonstrated unauthenticated mod_php attack path before application code runs. This tracker has not reproduced it or established exploitation in the wild.",
+        "detail": "PHP reports a demonstrated unauthenticated mod_php attack path before application code runs. This tracker has not reproduced it or established exploitation in the wild. Cloudflare reports PHP2Shell attack attempts and payload mutation; this does not establish a successful compromise.",
         "sourceIds": [
           "php-news",
           "php-ghsa"
@@ -220,12 +379,41 @@
           "at": "2026-10-21",
           "title": "PHP security releases and mitigation guidance published",
           "detail": "Fixed builds announced for PHP 8.2, 8.3, 8.4 and 8.5.",
-          "url": "https://www.php.net/archive/2026.php"
+          "url": "https://www.php.net/archive/2026.php",
+          "kind": "patch",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-21T03:02:00Z",
+          "kind": "rule",
+          "title": "Cloudflare reports PHP2Shell rule deployment",
+          "detail": "Provider reports deployment to Free and paid WAF users. This is provider-reported protection, not a local test.",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "reviewStatus": "Provider documentation reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-26T20:19:07Z",
           "title": "Reviewed technical brief changed",
-          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+          "detail": "The published technical assessment was updated; inspect the current brief and sources.",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-26T21:11:09Z",
+          "firstSeen": "2026-10-26T21:11:09Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
+        },
+        {
+          "at": "2026-10-26T21:16:55Z",
+          "firstSeen": "2026-10-26T21:16:55Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -244,13 +432,169 @@
           "type": "Vendor advisory",
           "url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
           "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "research-2",
+          "title": "PHP2Shell stock-configuration PoC",
+          "url": "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "publisher": "9bie",
+          "type": "Pinned documentation review",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "research-3",
+          "title": "Alternative PHP2Shell lab implementation",
+          "url": "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "publisher": "Chr1s-T",
+          "type": "Pinned documentation review",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-4",
+          "title": "Cloudflare PHP2Shell protections evidence",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-5",
+          "title": "Review web-worker child shells evidence",
+          "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
         }
       ],
       "fixStatus": "Available",
-      "live": {
-        "leads": []
+      "exploits": [
+        {
+          "title": "PHP vendor OOM assessment",
+          "url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+          "publisher": "PHP Project",
+          "category": "Vendor assessment",
+          "environment": "Confirmed mod_php HTTP attack with default limits and multiple prefork workers.",
+          "behaviour": "Interrupted initialisation leaves invalid request data available to shutdown handling.",
+          "requirements": "A reachable allocation failure and an affected request lifecycle.",
+          "limitations": "FPM susceptibility is supported by source analysis; no complete FPM exploit is demonstrated for this CVE. Do not transfer the mod_php result to every SAPI.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": "2026-10-21",
+          "reviewStatus": "Documentation reviewed; not independently reproduced"
+        },
+        {
+          "title": "PHP2Shell stock-configuration PoC",
+          "url": "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "publisher": "9bie",
+          "category": "Public PoC",
+          "environment": "PHP 8.4.26 NTS mod_php, Apache 2.4.69 prefork, Debian 13 and file-backed sessions.",
+          "behaviour": "Author reports HTTP-only code execution with production settings, errors hidden, a 128M memory limit and 150 workers.",
+          "requirements": "A same-worker sequence and exact-build offsets. The implementation holds other workers to obtain affinity.",
+          "limitations": "Worker holding can disrupt availability. Claimed success rates describe the author's lab. No FPM or arbitrary-build portability is established. Only the pinned English README was reviewed.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": null,
+          "reviewStatus": "Documentation reviewed; not independently reproduced",
+          "commitSha": "d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "repositoryUrl": "https://github.com/9bie/php2shell-bypass-aslr-exp"
+        },
+        {
+          "title": "Alternative PHP2Shell lab implementation",
+          "url": "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "publisher": "Chr1s-T",
+          "category": "Public PoC",
+          "environment": "Author-tested x86-64 mod_php/prefork configurations.",
+          "behaviour": "A chain derived from an earlier upstream implementation, with checking and build-offset helpers.",
+          "requirements": "This implementation reports that display_errors=On, reachable startup OOM and exact offsets are required.",
+          "limitations": "These prerequisites differ from the newer upstream PoC. Do not apply them to every exploit. Probes intentionally fail requests or abort workers; the README describes disabled TLS verification. Only the pinned README was reviewed.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": null,
+          "reviewStatus": "Documentation reviewed; not independently reproduced",
+          "commitSha": "97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "repositoryUrl": "https://github.com/Chr1s-T/php2shell-cve-2026-109618"
+        }
+      ],
+      "controls": [
+        {
+          "title": "Install the fixed PHP build",
+          "kind": "Vendor fix",
+          "paths": [
+            "Affected request lifecycle"
+          ],
+          "coverage": "Use the complete vendor fix and restart affected workers.",
+          "limitation": "Confirm package backports and the running SAPI.",
+          "validation": "Vendor documented; no local exploit test recorded.",
+          "sourceUrls": [
+            "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w"
+          ]
+        },
+        {
+          "title": "Review memory and frontend limits",
+          "kind": "Partial mitigation",
+          "paths": [
+            "Controllable allocation-failure paths",
+            "Multipart parsing"
+          ],
+          "coverage": "Vendor guidance reduces specific OOM and request-processing paths.",
+          "limitation": "The vendor memory_limit=-1 workaround does not prevent underlying allocation failures and changes availability risk. Do not use RLIMIT_AS or RLIMIT_DATA as substitutes.",
+          "validation": "Vendor documented; requires workload and resource-limit assessment.",
+          "sourceUrls": [
+            "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w"
+          ]
+        },
+        {
+          "title": "Cloudflare PHP2Shell protections",
+          "kind": "Provider WAF rules",
+          "paths": [
+            "Transactions traversing Cloudflare WAF"
+          ],
+          "coverage": "Provider reports default Free and paid protections. Rule #6 covers known 115560 attempts using the default upload-progress field name.",
+          "limitation": "Custom session.upload_progress.name is outside the stated 115560 coverage. A response block does not establish that the origin was unaffected.",
+          "validation": "Provider documentation reviewed; verify enabled rules, action, route and telemetry. No local protection test recorded.",
+          "sourceUrls": [
+            "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/"
+          ],
+          "ruleIds": {
+            "Free rule 6": "19373a83abb840e18ab3ce5a7975ce1b",
+            "Managed rule 6": "4148ae686fdb4d01be673fab9d9c073d"
+          }
+        },
+        {
+          "title": "Review web-worker child shells",
+          "kind": "Candidate hunting query",
+          "paths": [
+            "Child-process telemetry after possible execution"
+          ],
+          "coverage": "Finds selected shells launched by monitored web runtimes.",
+          "limitation": "Generic behaviour with legitimate matches. It can miss execution without a child shell. It neither identifies this CVE nor blocks exploitation.",
+          "validation": "Schema checked against Defender documentation. Query has not run against live tenant data.",
+          "sourceUrls": [
+            "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table"
+          ],
+          "language": "Defender KQL",
+          "query": "DeviceProcessEvents\n| where Timestamp > ago(7d)\n| where (InitiatingProcessFileName in~ (\"php\", \"php.exe\", \"php-cgi\", \"php-cgi.exe\", \"apache2\", \"httpd\") or InitiatingProcessFileName startswith \"php-fpm\")\n| where FileName in~ (\"sh\", \"bash\", \"dash\", \"zsh\", \"cmd.exe\", \"powershell.exe\", \"pwsh.exe\")\n| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine, AccountName, ReportId\n| order by Timestamp desc",
+          "testPlan": "Run against representative telemetry. Baseline legitimate child processes, test benign authorised shell launches and document false positives and missing telemetry."
+        }
+      ],
+      "openQuestions": [
+        "Identify the deployed SAPI and vendor package build.",
+        "Check decoded request-size enforcement when Content-Length is absent.",
+        "Distinguish a source claim from an independently reproduced PoC result."
+      ],
+      "indicatorAssessment": {
+        "summary": "No confirmed CVE-specific compromise indicators were found in the primary sources reviewed.",
+        "limitation": "This records the review scope, not proof that no indicators exist. Lab addresses, reflected id output, crashes and generic shell activity are not confirmed campaign indicators.",
+        "reviewedAt": "2026-10-26",
+        "sourceUrls": [
+          "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+          "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d"
+        ]
       },
-      "revision": "9c0ea5f8f2d718ece4b6"
+      "live": {
+        "leads": [],
+        "leadSources": {},
+        "leadCoverage": "0 distinct links returned by the retained source snapshots. Up to 250 active and historical links are kept. Search and filename matches are not exhaustive. "
+      },
+      "revision": "1a4b7571ebf34dea7dd9"
     },
     {
       "id": "CVE-2026-109619",
@@ -280,7 +624,7 @@
       ],
       "exploitation": {
         "status": "Vendor-documented RCE paths",
-        "detail": "The vendor advisory describes critical RCE and confirmed session and fatal-backtrace paths. This tracker does not establish a reliable public PoC or exploitation in the wild.",
+        "detail": "The vendor advisory describes critical RCE and confirmed session and fatal-backtrace paths. This tracker does not establish a reliable public PoC or exploitation in the wild. Cloudflare reports PHP2Shell attack attempts and payload mutation; this does not establish a successful compromise.",
         "sourceIds": [
           "php-news",
           "php-ghsa"
@@ -330,12 +674,41 @@
           "at": "2026-10-21",
           "title": "PHP publishes fixes and path-specific mitigations",
           "detail": "PHP distinguishes full remediation by update from partial configuration measures.",
-          "url": "https://www.php.net/archive/2026.php"
+          "url": "https://www.php.net/archive/2026.php",
+          "kind": "patch",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-21T03:02:00Z",
+          "kind": "rule",
+          "title": "Cloudflare reports PHP2Shell rule deployment",
+          "detail": "Provider reports deployment to Free and paid WAF users. This is provider-reported protection, not a local test.",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "reviewStatus": "Provider documentation reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-26T20:19:07Z",
           "title": "Reviewed technical brief changed",
-          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+          "detail": "The published technical assessment was updated; inspect the current brief and sources.",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-26T21:11:09Z",
+          "firstSeen": "2026-10-26T21:11:09Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
+        },
+        {
+          "at": "2026-10-26T21:16:55Z",
+          "firstSeen": "2026-10-26T21:16:55Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -354,13 +727,186 @@
           "type": "Vendor advisory",
           "url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
           "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "research-2",
+          "title": "PHP2Shell stock-configuration PoC",
+          "url": "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "publisher": "9bie",
+          "type": "Pinned documentation review",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "research-3",
+          "title": "Alternative PHP2Shell lab implementation",
+          "url": "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "publisher": "Chr1s-T",
+          "type": "Pinned documentation review",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-4",
+          "title": "Cloudflare PHP2Shell protections evidence",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-5",
+          "title": "Review web-worker child shells evidence",
+          "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
         }
       ],
       "fixStatus": "Available",
-      "live": {
-        "leads": []
+      "exploits": [
+        {
+          "title": "PHP vendor stale-state assessment",
+          "url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+          "publisher": "PHP Project",
+          "category": "Vendor assessment",
+          "environment": "Fatal-backtrace code execution confirmed on mod_php; session-lifecycle code execution validated on mod_php and FPM.",
+          "behaviour": "Released request state remains reachable from worker globals and is consumed by a later request.",
+          "requirements": "A concrete producer, missed reset, released memory, the same worker and an early consumer.",
+          "limitations": "The validated FPM session route publishes state after successful startup during application execution. It is not the mod_php pre-application sequence.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": "2026-10-21",
+          "reviewStatus": "Documentation reviewed; not independently reproduced"
+        },
+        {
+          "title": "PHP2Shell stock-configuration PoC",
+          "url": "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "publisher": "9bie",
+          "category": "Public PoC",
+          "environment": "PHP 8.4.26 NTS mod_php, Apache 2.4.69 prefork, Debian 13 and file-backed sessions.",
+          "behaviour": "Author reports HTTP-only code execution with production settings, errors hidden, a 128M memory limit and 150 workers.",
+          "requirements": "A same-worker sequence and exact-build offsets. The implementation holds other workers to obtain affinity.",
+          "limitations": "Worker holding can disrupt availability. Claimed success rates describe the author's lab. No FPM or arbitrary-build portability is established. Only the pinned English README was reviewed.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": null,
+          "reviewStatus": "Documentation reviewed; not independently reproduced",
+          "commitSha": "d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "repositoryUrl": "https://github.com/9bie/php2shell-bypass-aslr-exp"
+        },
+        {
+          "title": "Alternative PHP2Shell lab implementation",
+          "url": "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "publisher": "Chr1s-T",
+          "category": "Public PoC",
+          "environment": "Author-tested x86-64 mod_php/prefork configurations.",
+          "behaviour": "A chain derived from an earlier upstream implementation, with checking and build-offset helpers.",
+          "requirements": "This implementation reports that display_errors=On, reachable startup OOM and exact offsets are required.",
+          "limitations": "These prerequisites differ from the newer upstream PoC. Do not apply them to every exploit. Probes intentionally fail requests or abort workers; the README describes disabled TLS verification. Only the pinned README was reviewed.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": null,
+          "reviewStatus": "Documentation reviewed; not independently reproduced",
+          "commitSha": "97593088211cc43b8d0ab5bbc36f9248cab3143d",
+          "repositoryUrl": "https://github.com/Chr1s-T/php2shell-cve-2026-109618"
+        }
+      ],
+      "controls": [
+        {
+          "title": "Install the complete state-reset fix",
+          "kind": "Vendor fix",
+          "paths": [
+            "Affected stale-state families"
+          ],
+          "coverage": "The vendor identifies the complete patch as the reliable general mitigation.",
+          "limitation": "Configuration changes do not cover every application and extension lifecycle.",
+          "validation": "Vendor documented; no local exploit test recorded.",
+          "sourceUrls": [
+            "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp"
+          ]
+        },
+        {
+          "title": "Disable demonstrated session operations",
+          "kind": "Partial mitigation",
+          "paths": [
+            "Confirmed session-lifecycle producer and consumer"
+          ],
+          "coverage": "Disable session upload progress administratively, then restart every worker.",
+          "limitation": "Other stale-state paths remain. Hiding diagnostics does not remove early consumers.",
+          "validation": "Vendor documented; effective configuration and restart require confirmation.",
+          "sourceUrls": [
+            "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp"
+          ],
+          "language": "PHP INI",
+          "query": "session.upload_progress.enabled=0",
+          "testPlan": "Confirm the setting in each web SAPI and pool after restart. Exercise legitimate uploads. Assess the other stale-state families separately."
+        },
+        {
+          "title": "Disable the PHP 8.5 backtrace producer",
+          "kind": "Partial mitigation",
+          "paths": [
+            "Confirmed PHP 8.5 fatal-backtrace path"
+          ],
+          "coverage": "Disable fatal_error_backtraces administratively and restart workers.",
+          "limitation": "Does not cover session or extension state.",
+          "validation": "Vendor documented; no local exploit test recorded.",
+          "sourceUrls": [
+            "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp"
+          ],
+          "language": "PHP INI",
+          "query": "fatal_error_backtraces=0"
+        },
+        {
+          "title": "Cloudflare PHP2Shell protections",
+          "kind": "Provider WAF rules",
+          "paths": [
+            "Transactions traversing Cloudflare WAF"
+          ],
+          "coverage": "Provider reports default Free and paid protections. Rule #6 covers known 115560 attempts using the default upload-progress field name.",
+          "limitation": "Custom session.upload_progress.name is outside the stated 115560 coverage. A response block does not establish that the origin was unaffected.",
+          "validation": "Provider documentation reviewed; verify enabled rules, action, route and telemetry. No local protection test recorded.",
+          "sourceUrls": [
+            "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/"
+          ],
+          "ruleIds": {
+            "Free rule 6": "19373a83abb840e18ab3ce5a7975ce1b",
+            "Managed rule 6": "4148ae686fdb4d01be673fab9d9c073d"
+          }
+        },
+        {
+          "title": "Review web-worker child shells",
+          "kind": "Candidate hunting query",
+          "paths": [
+            "Child-process telemetry after possible execution"
+          ],
+          "coverage": "Finds selected shells launched by monitored web runtimes.",
+          "limitation": "Generic behaviour with legitimate matches. It can miss execution without a child shell. It neither identifies this CVE nor blocks exploitation.",
+          "validation": "Schema checked against Defender documentation. Query has not run against live tenant data.",
+          "sourceUrls": [
+            "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table"
+          ],
+          "language": "Defender KQL",
+          "query": "DeviceProcessEvents\n| where Timestamp > ago(7d)\n| where (InitiatingProcessFileName in~ (\"php\", \"php.exe\", \"php-cgi\", \"php-cgi.exe\", \"apache2\", \"httpd\") or InitiatingProcessFileName startswith \"php-fpm\")\n| where FileName in~ (\"sh\", \"bash\", \"dash\", \"zsh\", \"cmd.exe\", \"powershell.exe\", \"pwsh.exe\")\n| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine, AccountName, ReportId\n| order by Timestamp desc",
+          "testPlan": "Run against representative telemetry. Baseline legitimate child processes, test benign authorised shell launches and document false positives and missing telemetry."
+        }
+      ],
+      "openQuestions": [
+        "Identify a reachable producer and early consumer in each application.",
+        "Check worker reuse and effective session settings.",
+        "Test the actual control placement and failure conditions."
+      ],
+      "indicatorAssessment": {
+        "summary": "No confirmed CVE-specific compromise indicators were found in the primary sources reviewed.",
+        "limitation": "This records the review scope, not proof that no indicators exist. Lab addresses, reflected id output, crashes and generic shell activity are not confirmed campaign indicators.",
+        "reviewedAt": "2026-10-26",
+        "sourceUrls": [
+          "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+          "https://github.com/9bie/php2shell-bypass-aslr-exp/tree/d6f888ebd3f0e188bb662e16f23747afdf35e42f",
+          "https://github.com/Chr1s-T/php2shell-cve-2026-109618/tree/97593088211cc43b8d0ab5bbc36f9248cab3143d"
+        ]
       },
-      "revision": "d51d4d5e9acaa498938b"
+      "live": {
+        "leads": [],
+        "leadSources": {},
+        "leadCoverage": "0 distinct links returned by the retained source snapshots. Up to 250 active and historical links are kept. Search and filename matches are not exhaustive. "
+      },
+      "revision": "bd1ea693b8311c8c32f9"
     },
     {
       "id": "CVE-2026-115560",
@@ -421,15 +967,44 @@
       ],
       "history": [
         {
+          "at": "2026-10-21T03:02:00Z",
+          "kind": "rule",
+          "title": "Cloudflare reports PHP2Shell rule deployment",
+          "detail": "Provider reports deployment to Free and paid WAF users. This is provider-reported protection, not a local test.",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "reviewStatus": "Provider documentation reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
           "at": "2026-10-23",
           "title": "Informational PHP advisory published",
           "detail": "PHP describes the prerequisites, temporary mitigation and planned regular-release handling.",
-          "url": "https://www.php.net/archive/2026.php"
+          "url": "https://www.php.net/archive/2026.php",
+          "kind": "advisory",
+          "reviewStatus": "Source reviewed",
+          "firstSeen": "2026-10-26T21:11:09Z"
         },
         {
           "at": "2026-10-26T20:19:07Z",
           "title": "Reviewed technical brief changed",
-          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+          "detail": "The published technical assessment was updated; inspect the current brief and sources.",
+          "firstSeen": "2026-10-26T21:11:09Z"
+        },
+        {
+          "at": "2026-10-26T21:11:09Z",
+          "firstSeen": "2026-10-26T21:11:09Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
+        },
+        {
+          "at": "2026-10-26T21:16:55Z",
+          "firstSeen": "2026-10-26T21:16:55Z",
+          "kind": "assessment-update",
+          "reviewStatus": "Needs review",
+          "title": "Published technical brief changed",
+          "detail": "The published assessment or evidence changed; inspect the current brief and sources."
         }
       ],
       "sources": [
@@ -440,13 +1015,110 @@
           "type": "Vendor advisory",
           "url": "https://www.php.net/archive/2026.php",
           "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-1",
+          "title": "Cloudflare PHP2Shell protections evidence",
+          "url": "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "control-2",
+          "title": "Review web-worker child shells evidence",
+          "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table",
+          "publisher": "Provider documentation",
+          "type": "Control reference",
+          "reviewedAt": "2026-10-26"
         }
       ],
       "fixStatus": "Pending",
-      "live": {
-        "leads": []
+      "exploits": [
+        {
+          "title": "PHP session-handler-switching notice",
+          "url": "https://www.php.net/archive/2026.php",
+          "publisher": "PHP Project",
+          "category": "Vendor notice",
+          "environment": "Configuration starts with php_binary or php_serialize; application switches to php before session_start().",
+          "behaviour": "Vendor describes a configuration-dependent code-execution vector.",
+          "requirements": "Runtime serialisation-handler switching and enabled session upload progress.",
+          "limitations": "A complete CVE-specific public PoC was not established in this review. The 21 October fixes do not remediate this separate issue.",
+          "reviewedAt": "2026-10-26",
+          "publishedAt": "2026-10-23",
+          "reviewStatus": "Documentation reviewed; not independently reproduced"
+        }
+      ],
+      "controls": [
+        {
+          "title": "Disable session upload progress",
+          "kind": "Vendor mitigation",
+          "paths": [
+            "Described session-handler-switching vector"
+          ],
+          "coverage": "Set session.upload_progress.enabled=0 and verify effective worker settings.",
+          "limitation": "The vendor plans a regular-release fix. No fixed version is established in this snapshot.",
+          "validation": "Vendor informational notice reviewed; no local exploit test recorded.",
+          "sourceUrls": [
+            "https://www.php.net/archive/2026.php"
+          ],
+          "language": "PHP INI",
+          "query": "session.upload_progress.enabled=0",
+          "testPlan": "Review runtime ini_set calls and initial serialisation settings. Verify effective web-worker configuration and regression-test upload progress."
+        },
+        {
+          "title": "Cloudflare PHP2Shell protections",
+          "kind": "Provider WAF rules",
+          "paths": [
+            "Transactions traversing Cloudflare WAF"
+          ],
+          "coverage": "Provider reports default Free and paid protections. Rule #6 covers known 115560 attempts using the default upload-progress field name.",
+          "limitation": "Custom session.upload_progress.name is outside the stated 115560 coverage. A response block does not establish that the origin was unaffected.",
+          "validation": "Provider documentation reviewed; verify enabled rules, action, route and telemetry. No local protection test recorded.",
+          "sourceUrls": [
+            "https://blog.cloudflare.com/php-vulnerabilities-waf-protection/"
+          ],
+          "ruleIds": {
+            "Free rule 6": "19373a83abb840e18ab3ce5a7975ce1b",
+            "Managed rule 6": "4148ae686fdb4d01be673fab9d9c073d"
+          }
+        },
+        {
+          "title": "Review web-worker child shells",
+          "kind": "Candidate hunting query",
+          "paths": [
+            "Child-process telemetry after possible execution"
+          ],
+          "coverage": "Finds selected shells launched by monitored web runtimes.",
+          "limitation": "Generic behaviour with legitimate matches. It can miss execution without a child shell. It neither identifies this CVE nor blocks exploitation.",
+          "validation": "Schema checked against Defender documentation. Query has not run against live tenant data.",
+          "sourceUrls": [
+            "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table"
+          ],
+          "language": "Defender KQL",
+          "query": "DeviceProcessEvents\n| where Timestamp > ago(7d)\n| where (InitiatingProcessFileName in~ (\"php\", \"php.exe\", \"php-cgi\", \"php-cgi.exe\", \"apache2\", \"httpd\") or InitiatingProcessFileName startswith \"php-fpm\")\n| where FileName in~ (\"sh\", \"bash\", \"dash\", \"zsh\", \"cmd.exe\", \"powershell.exe\", \"pwsh.exe\")\n| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, FileName, ProcessCommandLine, AccountName, ReportId\n| order by Timestamp desc",
+          "testPlan": "Run against representative telemetry. Baseline legitimate child processes, test benign authorised shell launches and document false positives and missing telemetry."
+        }
+      ],
+      "openQuestions": [
+        "Does application code change the session serialisation handler at runtime?",
+        "Has the full advisory or regular-release fix become available?",
+        "If using WAF rule #6, is the upload-progress field name still the default?"
+      ],
+      "indicatorAssessment": {
+        "summary": "No confirmed CVE-specific compromise indicators were found in the primary sources reviewed.",
+        "limitation": "This records the review scope, not proof that no indicators exist. Lab addresses, reflected id output, crashes and generic shell activity are not confirmed campaign indicators.",
+        "reviewedAt": "2026-10-26",
+        "sourceUrls": [
+          "https://www.php.net/archive/2026.php"
+        ]
       },
-      "revision": "79acf0c4810d109e7395"
+      "live": {
+        "leads": [],
+        "leadSources": {},
+        "leadCoverage": "0 distinct links returned by the retained source snapshots. Up to 250 active and historical links are kept. Search and filename matches are not exhaustive. "
+      },
+      "revision": "1b05b5f37ff192c025a1"
     }
   ],
   "health": [
@@ -475,6 +1147,24 @@
       "lastSuccess": null
     },
     {
+      "name": "Reviewed repository: 9bie/php2shell-bypass-aslr-exp",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Reviewed repository: Chr1s-T/php2shell-cve-2026-109618",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Reviewed repository: dimasma0305/CVE-2026-111497-POC",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
       "name": "CVE record: CVE-2026-111497",
       "status": "pending",
       "checkedAt": null,
@@ -482,6 +1172,18 @@
     },
     {
       "name": "Repository leads: CVE-2026-111497",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "PoC index: CVE-2026-111497",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CIRCL timeline: CVE-2026-111497",
       "status": "pending",
       "checkedAt": null,
       "lastSuccess": null
@@ -499,6 +1201,18 @@
       "lastSuccess": null
     },
     {
+      "name": "PoC index: CVE-2026-109618",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CIRCL timeline: CVE-2026-109618",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
       "name": "CVE record: CVE-2026-109619",
       "status": "pending",
       "checkedAt": null,
@@ -506,6 +1220,18 @@
     },
     {
       "name": "Repository leads: CVE-2026-109619",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "PoC index: CVE-2026-109619",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CIRCL timeline: CVE-2026-109619",
       "status": "pending",
       "checkedAt": null,
       "lastSuccess": null
@@ -523,6 +1249,18 @@
       "lastSuccess": null
     },
     {
+      "name": "PoC index: CVE-2026-115560",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CIRCL timeline: CVE-2026-115560",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
       "name": "Node.js security releases",
       "status": "pending",
       "checkedAt": null,
@@ -530,6 +1268,30 @@
     },
     {
       "name": "PHP security news",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Imperva Node2Shell research",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "PHP OOM advisory",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "PHP stale-state advisory",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Cloudflare PHP2Shell coverage",
       "status": "pending",
       "checkedAt": null,
       "lastSuccess": null

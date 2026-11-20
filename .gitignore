@@ -40,3 +40,5 @@ yarn-error.log*
 /work/
 /candidate-discovery.json
 /repository-health.json
+
+__pycache__/
