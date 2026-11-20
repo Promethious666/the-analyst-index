@@ -10,7 +10,7 @@ Each brief records exploitation requirements, affected versions, mitigation cove
 
 Word exports are real `.docx` files created in the browser. PDF export opens a printable report and uses the browser's print-to-PDF facility. Reports include source links, evidence status, review dates and collection errors. An optional author name is used only in the downloaded report. Word-export history and watchlists stay in browser storage; clearing browser data removes them.
 
-Update reports use the previous Word-export request as their baseline. A browser cannot confirm that the user saved the file. Printing does not move that baseline. History is limited to the latest 100 developments per brief.
+Update reports use the previous Word-export request as their baseline. A browser cannot confirm that the user saved the file. Printing does not move that baseline. Reviewed milestones are retained alongside the latest 100 automatic changes per brief.
 
 ## Run and check
 
@@ -36,3 +36,13 @@ Add tracked vulnerabilities by editing `public/threat-tracker/briefs.json`. Incl
 ## Cost and reuse
 
 The design uses a public repository, standard GitHub-hosted runners and GitHub Pages within their free-service limits. No custom domain is required. Providers can change limits or terms. Upstream data, repositories and rule licences remain with their respective publishers. The tracker links to research and rules rather than republishing exploit code or vendor articles.
+
+## Evidence review and timelines
+
+Exploit assessments record the source's claimed environment, prerequisites, outcome and limits. Public code reviews link to a pinned revision. Documentation review never becomes an independent reproduction claim. Controls map to explicit attack paths, retain testing status and can include candidate queries or rule examples. The Brotli WAF example is in Count mode and covers incoming encoding headers only.
+
+PoC-in-GitHub adds repository discovery beyond the bounded direct search. CIRCL adds targeted dated reports for each selected CVE. Its upstream dates and exploitation claims remain unreviewed. No social report changes the reviewed exploitation assessment. Collector requests use a contact User-Agent, response/time limits and Retry-After deferrals; no CVE-space enumeration is performed. Up to 250 active/historical leads and 500 upstream timeline events are retained per CVE, with the bounds displayed.
+
+The Timeline tab filters reviewed events and upstream reports separately. First-seen dates are preserved independently from source dates. Reports include late discoveries according to first-seen date, and preserve the original event date and source. CSV exports the filtered timeline; JSON includes the full current evidence plus the selected event delta. These exports do not move the Word report baseline.
+
+The [investigation standard](RESEARCH-STANDARD.md) records the comparison baseline and evidence requirements. No universal superiority claim is made without a comparative evaluation.
