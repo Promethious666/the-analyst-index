@@ -13,7 +13,7 @@ from email.utils import parsedate_to_datetime
 from urllib.error import HTTPError
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
-from review_inbox import collect_inbox, render_inbox
+from review_inbox import collect_inbox, inbox_json
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public" / "threat-tracker"
@@ -398,7 +398,9 @@ def main():
             print("No previous deployment found; using the checked-in snapshot.")
     output = collect(briefs, previous, offline=args.offline)
     template = (ROOT / "scripts" / "review-inbox.html").read_text(encoding="utf-8")
-    (SOURCE / "inbox.html").write_text(render_inbox(template, output), encoding="utf-8")
+    payload = inbox_json(output)
+    (SOURCE / "inbox-data.json").write_text(payload + "\n", encoding="utf-8")
+    (SOURCE / "inbox.html").write_text(template.replace("<!--PUBLIC_SNAPSHOT-->", payload), encoding="utf-8")
     data_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     target = ROOT / "docs" / "threat-tracker"
     target.mkdir(parents=True, exist_ok=True)

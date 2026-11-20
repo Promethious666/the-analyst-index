@@ -184,8 +184,7 @@ def collect_inbox(briefs, records, previous, kev, check, fetch, now):
     return sorted(items.values(), key=lambda i:(i["latest"],i["id"]), reverse=True)
 
 
-def render_inbox(template, data):
+def inbox_json(data):
     inbox_health = [h for h in data["health"] if h["name"] == "CISA KEV" or h["name"].startswith(("Review page:", "GitHub advisories:"))]
-    payload = {"items": data["inbox"], "generatedAt": data["generatedAt"], "health": inbox_health}
-    encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":")).replace("<", "\\u003c")
-    return template.replace("<!--PUBLIC_SNAPSHOT-->", encoded)
+    payload = {"schemaVersion": 1, "items": data["inbox"], "generatedAt": data["generatedAt"], "health": inbox_health}
+    return json.dumps(payload, ensure_ascii=True, separators=(",", ":")).replace("<", "\\u003c")

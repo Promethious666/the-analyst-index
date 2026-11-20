@@ -76,7 +76,7 @@ class CollectorTests(unittest.TestCase):
         incident = next(x for x in value["inbox"] if x["id"] == "WFX-PHANTOM")
         self.assertEqual(len(incident["reports"]), 2)
         incident["title"] = "</script><i>untrusted</i>"
-        html = collector.render_inbox("<!--PUBLIC_SNAPSHOT-->", value)
+        html = collector.inbox_json(value)
         self.assertNotIn("</script>", html)
         self.assertTrue(any(x["title"]==incident["title"] for x in json.loads(html)["items"]))
 

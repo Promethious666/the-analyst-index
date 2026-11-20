@@ -17,7 +17,7 @@ aside,article,.health{background:#fffef8;border:1px solid var(--line);border-rad
 @media(max-width:700px){main,header nav{padding:14px}.layout{grid-template-columns:1fr}.row{padding:8px}.filters label{flex:1}aside,article{padding:15px}}
 </style></head><body><a class="skip" href="#detail">Skip to selected item</a>
 <header><nav><strong>The Analyst Index</strong><a id="dashboard" href="./index.html">Vulnerability dashboard</a></nav></header>
-<main><div class="top"><div><h1>Review inbox</h1><p id="fresh" class="muted"></p></div><button id="reload">Refresh snapshot</button></div>
+<main><div class="top"><div><h1>Review inbox</h1><p id="fresh" class="muted"></p></div><button id="reload">Check for updates</button></div>
 <div class="filters"><label>Search<input type="search" id="find" placeholder="CVE, package or incident"></label>
 <label>Queue<select id="scope"><option value="all">All items</option><option value="attention">Needs review</option><option value="follow">Following</option></select></label>
 <label>Type<select id="kind"><option value="">All types</option><option>Vulnerability</option><option>Supply chain incident</option><option>Malicious package</option></select></label></div>
@@ -29,8 +29,9 @@ aside,article,.health{background:#fffef8;border:1px solid var(--line);border-rad
 <script type="application/json" id="snapshot"><!--PUBLIC_SNAPSHOT--></script>
 <script>
 "use strict";
-const data=JSON.parse(document.getElementById("snapshot").textContent);
+let data=JSON.parse(document.getElementById("snapshot").textContent);
 const el=id=>document.getElementById(id);
+const live=/^https?:$/.test(location.protocol);
 const dashboard=location.protocol==="file:"?"https://promethious666.github.io/the-analyst-index/threat-tracker/":"./index.html";
 el("dashboard").href=dashboard;
 const prefsKey="analyst-index-review-inbox-v1";
@@ -54,10 +55,10 @@ function drawDetail(item){
  if(item.summary)node("p",item.summary,box,"summary");
  node("p","Last reviewed here: "+(p.at?dateText(p.at):"Never")+" · Next review: "+(p.due?dateText(new Date(p.due).toISOString()):"Set when reviewed"),box,"muted");
  const actions=node("div","",box,"actions"),follow=node("button",p.follow?"Following":"Follow",actions);
- follow.setAttribute("aria-pressed",String(Boolean(p.follow)));follow.onclick=()=>{prefs[item.id]={...p,follow:!p.follow};save();draw();};
+ follow.id="follow";follow.setAttribute("aria-pressed",String(Boolean(p.follow)));follow.onclick=()=>{prefs[item.id]={...p,follow:!p.follow};save();draw();};
  const label=node("label","Review again in ",actions),days=node("select","",label);
  for(const [v,t] of [[4,"4 hours"],[24,"1 day"],[168,"7 days"]]){const o=node("option",t,days);o.value=v;}
- days.value=String(p.hours||24);const mark=node("button","Mark reviewed",actions,"primary");
+ days.id="review-hours";days.value=String(p.hours||24);const mark=node("button","Mark reviewed",actions,"primary");mark.id="mark-reviewed";
  mark.onclick=()=>{const hours=Number(days.value);prefs[item.id]={...p,hours,revision:item.revision,at:new Date().toISOString(),due:Date.now()+hours*3600000,baseline:item.history.map(eventKey)};save();draw();el("notice").textContent=item.id+" marked as reviewed on this device.";};
  if(item.brief){const a=node("a","Open technical brief",actions);a.href=dashboard+"#"+encodeURIComponent(item.id);}
  node("h3",p.revision?"Changes since your review":"Latest developments",box);
@@ -76,23 +77,68 @@ function draw(){
  if(selected&&items.some(i=>i.id===selected))page=Math.floor(items.findIndex(i=>i.id===selected)/8);
  const visible=items.slice(page*8,page*8+8);const item=visible.find(i=>i.id===selected)||visible[0];selected=item?.id||"";
  el("rows").replaceChildren();el("count").textContent=items.length+" matching item"+(items.length===1?"":"s");
- for(const i of visible){const b=node("button","",el("rows"),"row");node("small",i.id+" · "+status(i),b);node("strong",i.title,b);b.setAttribute("aria-current",String(i.id===selected));b.onclick=()=>{selected=i.id;draw();el("detail").focus();};}
+ for(const i of visible){const b=node("button","",el("rows"),"row");b.id="row-"+i.id;node("small",i.id+" · "+status(i),b);node("strong",i.title,b);b.setAttribute("aria-current",String(i.id===selected));b.onclick=()=>{selected=i.id;draw();el("detail").focus();};}
  el("prev").disabled=page===0;el("next").disabled=page+1>=pages;el("page").textContent=(page+1)+" / "+pages;
  try{history.replaceState(null,"",selected?"#"+encodeURIComponent(selected):location.pathname);}catch{}
  drawDetail(item);
 }
 for(const id of ["find","scope","kind"])el(id).addEventListener(id==="find"?"input":"change",()=>{selected="";page=0;draw();});
 for(const [id,step] of [["prev",-1],["next",1]])el(id).onclick=()=>{selected="";page+=step;draw();};
-el("reload").onclick=()=>location.reload();
+function collectionStatus(){
 const checked=data.health.filter(h=>h.status==="ok").length;
 const old=Date.now()-Date.parse(data.generatedAt)>12*3600000;
 el("fresh").textContent=(checked?(old?"Older snapshot · ":"Snapshot · "):"Reviewed starting snapshot · ")+dateText(data.generatedAt);
-if(location.protocol!=="file:"){
+if(live){
  const nextSlot=new Date();nextSlot.setUTCHours(Math.floor(nextSlot.getUTCHours()/4)*4,23,0,0);
  if(nextSlot<=Date.now())nextSlot.setUTCHours(nextSlot.getUTCHours()+4);
- el("fresh").textContent+=" · Next scheduled collection "+dateText(nextSlot.toISOString())+" (may be delayed)";
+ el("fresh").textContent+=" · Next scheduled collection "+dateText(nextSlot.toISOString())+" · This page checks automatically every 5 minutes.";
 }
 el("health-title").textContent="Source checks · "+checked+" of "+data.health.length+" successful";
+el("health").replaceChildren();
 for(const h of data.health)node("p",h.name+" · "+(h.status==="ok"?"Checked":h.status==="pending"?"Awaiting collection":"Unavailable")+" · Last success "+(h.lastSuccess?dateText(h.lastSuccess):"not recorded"),el("health"));
-draw();setInterval(()=>{if(!document.hidden&&!el("detail").contains(document.activeElement))draw();},60000);
+}
+function redrawAfterUpdate(){
+ const current=selected, focused=document.activeElement?.id, hours=el("review-hours")?.value;
+ const details=el("detail").querySelector("details")?.open;
+ draw();
+ if(current===selected){
+  if(hours&&el("review-hours"))el("review-hours").value=hours;
+  const earlier=el("detail").querySelector("details");if(earlier&&details)earlier.open=true;
+ }
+ if(focused&&document.activeElement?.id!==focused)el(focused)?.focus({preventScroll:true});
+}
+let checking=false,lastCheck=0,lastTick=Date.now();
+async function checkForUpdates(manual=false){
+ if(checking||(!manual&&(document.hidden||Date.now()-lastCheck<5*60*1000)))return;
+ checking=true;lastCheck=Date.now();
+ try{
+  const response=await fetch("./inbox-data.json",{cache:"no-cache",credentials:"omit",referrerPolicy:"no-referrer"});
+  if(!response.ok)throw new Error("Feed unavailable");
+  const latest=await response.json();
+  if(latest.schemaVersion!==1||!Number.isFinite(Date.parse(latest.generatedAt))||!Array.isArray(latest.items)||!Array.isArray(latest.health))throw new Error("Invalid inbox");
+  if(Date.parse(latest.generatedAt)>Date.parse(data.generatedAt)){
+   data=latest;redrawAfterUpdate();el("notice").textContent="New collection loaded automatically.";
+  }else if(manual)el("notice").textContent="You have the latest published collection.";
+  else if(el("notice").dataset.refreshError)el("notice").textContent="";
+  delete el("notice").dataset.refreshError;
+ }catch{
+  el("notice").textContent="Update check unavailable. Showing the last collection. The page will retry automatically.";
+  el("notice").dataset.refreshError="true";
+ }finally{checking=false;collectionStatus();}
+}
+collectionStatus();draw();
+if(live){
+ el("reload").onclick=()=>checkForUpdates(true);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkForUpdates();});
+ setInterval(()=>{
+  if(document.hidden)return;
+  const now=Date.now(),due=Object.values(prefs).some(p=>p.due>lastTick&&p.due<=now);
+  lastTick=now;if(due)redrawAfterUpdate();
+  collectionStatus();checkForUpdates();
+ },60000);
+ checkForUpdates();
+}else{
+ el("reload").textContent="Open live inbox";
+ el("reload").onclick=()=>location.assign("https://promethious666.github.io/the-analyst-index/threat-tracker/inbox.html");
+}
 </script></body></html>
