@@ -19,7 +19,7 @@
   <main>
     <section class="page-heading" aria-labelledby="page-title">
       <div><h1 id="page-title">Dashboard</h1><p>Choose a vulnerability to see the latest information or download a report.</p></div>
-      <a class="update-status" href="#health"><strong id="freshness">Loading data</strong><span id="collection-detail"></span></a>
+      <div class="update-controls"><a class="update-status" href="#health"><strong id="freshness">Loading data</strong><span id="collection-detail"></span></a><button class="quiet-button" id="refresh-data">Check for updates</button></div>
     </section>
     <section class="stats" aria-label="Overview" id="stats"></section>
     <section class="toolbar" aria-label="Filter vulnerabilities">
@@ -56,6 +56,7 @@
     <p>The dashboard combines reviewed technical notes with automatically collected information from public sources.</p>
     <p>New repository links and rules need checking. A link mentioning a CVE does not prove that an exploit works or that a rule will stop it.</p>
     <p>If a source cannot be reached, its earlier information is kept. Data sources shows when each check last succeeded.</p>
+    <p>While this page is visible, it checks for a new published snapshot every 15 minutes. The update button tells you when new data is available.</p>
     <p>Reports include the sources, review dates and any collection problems. They do not assess exposure in your own environment.</p>
     <p>Your followed vulnerabilities and report history are saved in this browser. You do not need an account.</p>
   </dialog>
