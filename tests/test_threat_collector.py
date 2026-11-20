@@ -76,9 +76,30 @@ class CollectorTests(unittest.TestCase):
         incident = next(x for x in value["inbox"] if x["id"] == "WFX-PHANTOM")
         self.assertEqual(len(incident["reports"]), 2)
         incident["title"] = "</script><i>untrusted</i>"
+        value["daily"] = collector.daily_archive([incident], {})
         html = collector.inbox_json(value)
         self.assertNotIn("</script>", html)
-        self.assertTrue(any(x["title"]==incident["title"] for x in json.loads(html)["items"]))
+        self.assertTrue(all(day["WFX-PHANTOM"]["title"] == incident["title"]
+                            for day in json.loads(html)["days"].values()))
+
+    def test_daily_briefs_keep_historical_versions_and_group_observed_changes(self):
+        key = "GHSA-abcd-2345-6789"
+        old_day, new_day = "2026-10-20", "2026-10-27"
+        row = {"ghsa_id": key, "summary": "Package advisory", "updated_at": old_day,
+               "vulnerabilities": [{"package": {"name": "sample"}, "vulnerable_version_range": "<2"}]}
+        def source(url, **kwargs):
+            return [row] if "type=reviewed" in url else fixture_fetch(url, **kwargs)
+        first = collector.collect(BRIEFS, fetch=source, now=NOW)
+        old = copy.deepcopy(first["daily"][old_day][key]["updates"])
+        row["vulnerabilities"][0]["first_patched_version"] = "2"
+        second = collector.collect(BRIEFS, previous=first, fetch=source, now=new_day+"T12:00:00Z")
+        self.assertEqual(second["daily"][old_day][key]["updates"], old)
+        self.assertNotIn("fixed in", str(old))
+        self.assertIn("fixed in 2", second["daily"][new_day][key]["updates"][0]["text"])
+        self.assertEqual(second["daily"][new_day][key]["updates"][0]["date"], old_day)
+        again = collector.collect(BRIEFS, previous=second, fetch=source, now=new_day+"T16:00:00Z")
+        self.assertEqual(second["daily"], again["daily"])
+        self.assertEqual(collector.daily_archive([], again["daily"]), again["daily"])
 
     def test_new_references_are_unreviewed_and_new_cves_are_quarantined(self):
         value = collector.collect(BRIEFS, fetch=fixture_fetch, now=NOW)

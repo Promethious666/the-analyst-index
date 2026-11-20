@@ -1,4 +1,5 @@
 """Group public defensive bulletins by a shared identifier and retain material changes."""
+import copy
 import hashlib
 import json
 import re
@@ -84,6 +85,7 @@ def github_reports(fetch, feed, cutoff):
 def collect_inbox(briefs, records, previous, kev, check, fetch, now):
     cutoff = (date.fromisoformat(now[:10]) - timedelta(days=30)).isoformat()
     old = {item["id"]: item for item in previous}
+    established_feeds = {r["feed"] for item in previous for r in item["reports"].values() if r.get("feed")}
     items = {}
     def case(key, title, kind, summary=""):
         return items.setdefault(key, {"id": key, "title": title, "kind": kind, "summary": summary,
@@ -173,8 +175,18 @@ def collect_inbox(briefs, records, previous, kev, check, fetch, now):
                 if before.get("pageHash") and report.get("pageHash") != before["pageHash"]:
                     changes.append("Source page text changed. Its technical meaning needs review.")
             if changes:
-                events.append({"at": now, "date": report["date"], "source": report["publisher"],
-                               "url": url, "text": " ".join(changes)})
+                # Backfill the first collection on publisher dates. Later discoveries
+                # and revisions belong to the day they became visible in the tracker.
+                observed = before is not None or report.get("feed") in established_feeds or (
+                    not report.get("feed") and bool(previous))
+                event = {"at": now, "date": report["date"], "source": report["publisher"],
+                         "url": url, "text": " ".join(changes),
+                         "day": (now if observed else report["date"])[:10]}
+                if before is None:
+                    for field in ("action", "status", "versions"):
+                        if report.get(field):
+                            event[field] = report[field]
+                events.append(event)
         if prior.get("briefRevision") and prior["briefRevision"] != item.get("briefRevision") and item["brief"]:
             events.append({"at":now, "date":now, "source":"Technical brief", "url":"",
                            "text":item["briefChange"] or "The technical brief was revised."})
@@ -184,7 +196,36 @@ def collect_inbox(briefs, records, previous, kev, check, fetch, now):
     return sorted(items.values(), key=lambda i:(i["latest"],i["id"]), reverse=True)
 
 
+def daily_archive(items, previous):
+    days = copy.deepcopy(previous)
+    # An advisory can receive a CVE after its first appearance under a GHSA.
+    aliases = {url.rsplit("/", 1)[-1]: item["id"] for item in items
+               for url in item["reports"] if url.startswith("https://github.com/advisories/")
+               and item["id"].startswith("CVE-")}
+    for incidents in days.values():
+        for alias in incidents.keys() & aliases.keys():
+            older = incidents.pop(alias)
+            target = incidents.setdefault(aliases[alias], {**older, "updates": []})
+            for update in older["updates"]:
+                if update not in target["updates"]:
+                    target["updates"].append(update)
+    for item in items:
+        seen_urls = set()
+        for event in item["history"]:
+            # Older snapshots stored source and observation dates separately.
+            # The first entry for a report is its dated publication.
+            day = event.get("day") or (event["at"] if event["url"] in seen_urls else event["date"])[:10]
+            seen_urls.add(event["url"])
+            incidents = days.setdefault(day, {})
+            case = incidents.setdefault(item["id"], {"title": item["title"], "kind": item["kind"],
+                                                     "brief": item["brief"], "updates": []})
+            update = {k: v for k, v in event.items() if k != "day"}
+            if update not in case["updates"]:
+                case["updates"].append(update)
+    return days
+
+
 def inbox_json(data):
     inbox_health = [h for h in data["health"] if h["name"] == "CISA KEV" or h["name"].startswith(("Review page:", "GitHub advisories:"))]
-    payload = {"schemaVersion": 1, "items": data["inbox"], "generatedAt": data["generatedAt"], "health": inbox_health}
+    payload = {"schemaVersion": 2, "days": data["daily"], "generatedAt": data["generatedAt"], "health": inbox_health}
     return json.dumps(payload, ensure_ascii=True, separators=(",", ":")).replace("<", "\\u003c")

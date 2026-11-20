@@ -13,7 +13,7 @@ from email.utils import parsedate_to_datetime
 from urllib.error import HTTPError
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
-from review_inbox import collect_inbox, inbox_json
+from review_inbox import collect_inbox, daily_archive, inbox_json
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public" / "threat-tracker"
@@ -372,6 +372,7 @@ def collect(briefs, previous=None, offline=False, fetch=request, now=None):
         record["history"] = sorted([*reviewed_events,*automatic_events[-100:]],key=lambda e:e["at"])
     output["candidates"] = sorted(candidates.values(), key=lambda x: (x["firstSeen"], x["id"]), reverse=True)[:150]
     output["inbox"] = collect_inbox(briefs, records, previous.get("inbox", []), kev, check, fetch, now)
+    output["daily"] = daily_archive(output["inbox"], previous.get("daily", {}))
     return output
 
 
@@ -399,8 +400,8 @@ def main():
     output = collect(briefs, previous, offline=args.offline)
     template = (ROOT / "scripts" / "review-inbox.html").read_text(encoding="utf-8")
     payload = inbox_json(output)
-    (SOURCE / "inbox-data.json").write_text(payload + "\n", encoding="utf-8")
-    (SOURCE / "inbox.html").write_text(template.replace("<!--PUBLIC_SNAPSHOT-->", payload), encoding="utf-8")
+    (SOURCE / "daily-data.json").write_text(payload + "\n", encoding="utf-8")
+    (SOURCE / "daily.html").write_text(template.replace("<!--PUBLIC_SNAPSHOT-->", payload), encoding="utf-8")
     data_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     target = ROOT / "docs" / "threat-tracker"
     target.mkdir(parents=True, exist_ok=True)
@@ -408,7 +409,7 @@ def main():
         if path.is_file():
             shutil.copy2(path, target / path.name)
     failed = sum(x["status"] == "error" for x in output["health"])
-    print(f"Review inbox: {len(output['inbox'])} items, "
+    print(f"Daily incident briefs: {len(output['daily'])} days, {len(output['inbox'])} current incidents, "
           f"{sum(len(item['reports']) for item in output['inbox'])} source reports.")
     print(f"Prepared {len(output['records'])} briefs, {len(output['candidates'])} review candidates; {failed} source checks failed.")
     for source in output["health"]:
