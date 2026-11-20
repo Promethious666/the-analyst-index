@@ -42,7 +42,9 @@ def fingerprint(value):
 def article_hash(page):
     parser = ArticleText()
     parser.feed(page)
-    text = " ".join(" ".join(parser.main_text or parser.all_text).split())
+    text = " ".join(" ".join(parser.main_text).split())
+    if len(text) < 100:
+        text = " ".join(" ".join(parser.all_text).split())
     if len(text) < 100:
         raise ValueError("No article text")
     return fingerprint(text)
@@ -93,7 +95,7 @@ def collect_inbox(briefs, records, previous, kev, check, fetch, now):
             url = source["url"]
             prior = old.get(item["id"], {}).get("reports", {}).get(url, {})
             current = check("Review page: " + item["id"] + " / " + source["publisher"],
-                            lambda url=url: article_hash(fetch(url, expect_json=False, limit=3_000_000)))
+                            lambda url=url: article_hash(fetch(url, expect_json=False, limit=6_000_000)))
             report = dict(source)
             if current or prior.get("pageHash"):
                 report["pageHash"] = current or prior["pageHash"]

@@ -406,6 +406,8 @@ def main():
         if path.is_file():
             shutil.copy2(path, target / path.name)
     failed = sum(x["status"] == "error" for x in output["health"])
+    print(f"Review inbox: {len(output['inbox'])} items, "
+          f"{sum(len(item['reports']) for item in output['inbox'])} source reports.")
     print(f"Prepared {len(output['records'])} briefs, {len(output['candidates'])} review candidates; {failed} source checks failed.")
     for source in output["health"]:
         if source["status"] == "error":

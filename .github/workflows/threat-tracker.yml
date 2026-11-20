@@ -57,6 +57,14 @@ jobs:
       - name: Confirm live collection reached at least one source
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         run: python3 -c "import json; d=json.load(open('public/threat-tracker/data.json')); assert any(s['status']=='ok' for s in d['health']), 'All public source checks failed'"
+      - name: Save review inbox preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: review-inbox
+          path: docs/threat-tracker/inbox.html
+          retention-days: 7
+          if-no-files-found: error
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: github.event_name != 'pull_request'
         with:
