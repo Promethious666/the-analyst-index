@@ -65,6 +65,12 @@ export function timelineCsv(events) {
     .map(row=>row.map(cell).join(",")).join("\r\n");
 }
 
+function currentRiskEvidence(record) {
+  const live=record.live||{};
+  return [live.kev?.checkedAt?`CISA KEV: ${live.kev.listed?"Listed as known exploited":"Not listed in the retrieved catalogue; absence does not rule out exploitation"}. Checked ${live.kev.checkedAt}. Source: https://www.cisa.gov/known-exploited-vulnerabilities-catalog`:"CISA KEV: not checked successfully.",
+    ...(live.epss?[`EPSS: ${(Number(live.epss.score)*100).toFixed(2)}% predicted chance of exploitation in the next 30 days. Score dated ${live.epss.date}; this is a prediction. Source: https://www.first.org/epss/`]:[])];
+}
+
 export function buildReport(record, snapshot, {scope="full", previousExport=null, author="", now=new Date().toISOString()}={}) {
   const update = scope === "update";
   const previousTime = previousExport?.at || null;
@@ -74,7 +80,7 @@ export function buildReport(record, snapshot, {scope="full", previousExport=null
   if(scope==="brief") {
     add("Summary",[record.summary,`Next action: ${record.nextAction}`,`Severity: ${record.severity}. ${record.severityBasis}. Organisational exposure: not assessed.`]);
     add("Versions and fixes",record.affected.map(v=>`${v.product}: ${v.range}. Fix: ${v.fixed}.`));
-    add("Exploit evidence",[record.exploitation.status,record.exploitation.detail,"Source documentation has been reviewed. No independent exploit reproduction is recorded."]);
+    add("Exploit evidence",[record.exploitation.status,record.exploitation.detail,...currentRiskEvidence(record),"Source documentation has been reviewed. No independent exploit reproduction is recorded."]);
     add("Controls and gaps",(record.controls||[]).filter(c=>!c.kind.startsWith("Candidate")).slice(0,3).map(c=>`${c.title}: ${c.coverage} Limit: ${c.limitation}`));
     add("Checks still needed",record.openQuestions||[]);
     add("Recent reviewed developments",timelineEvents(record,{evidence:"reviewed"}).slice(0,5).map(e=>`${e.at}: ${e.title}.${e.url?` Source: ${e.url}`:""}`));
@@ -89,7 +95,7 @@ export function buildReport(record, snapshot, {scope="full", previousExport=null
   add("Executive summary", [record.summary, `Severity: ${record.severity}. ${record.severityBasis}`, "Organisational exposure: not assessed."]);
   add("Affected versions and fixes", record.affected.map(x => `${x.product}: ${x.range}. Fix: ${x.fixed}.`));
   add("How exploitation works", [record.technical, ...record.requirements.map(x => `Requirement: ${x}`)]);
-  add("Exploitation evidence", [record.exploitation.status, record.exploitation.detail, ...(record.exploitation.sourceIds||[]).map(id => `Evidence source: ${record.sources.find(s=>s.id===id)?.url || "Not established"}`), record.live?.kev?.checkedAt ? `CISA KEV: ${record.live.kev.listed ? "Listed" : "Not listed in the retrieved catalogue"}. Checked ${record.live.kev.checkedAt}. Absence does not establish absence of exploitation.` : "CISA KEV: not checked successfully."]);
+  add("Exploitation evidence", [record.exploitation.status, record.exploitation.detail, ...(record.exploitation.sourceIds||[]).map(id => `Evidence source: ${record.sources.find(s=>s.id===id)?.url || "Not established"}`), ...currentRiskEvidence(record)]);
   for(const exploit of record.exploits||[])add(`Exploit assessment: ${exploit.title}`,[`Status: ${exploit.reviewStatus}. Reviewed ${exploit.reviewedAt}.`, `Environment: ${exploit.environment}`, `Reported behaviour: ${exploit.behaviour}`, `Requirements: ${exploit.requirements}`, `Limitations: ${exploit.limitations}`, `Source: ${exploit.url}`, ...(exploit.commitSha?[`Reviewed revision: ${exploit.commitSha}`]:[])]);
   add("Mitigations and control coverage", record.mitigations.map(x => `${x.action} Coverage: ${x.coverage} Limit: ${x.limitation}`));
   add("Attack paths and control evidence", (record.controls||[]).map(c=>`${c.title} (${c.kind}). Paths: ${c.paths.join("; ")}. Coverage: ${c.coverage} Limit: ${c.limitation} Validation: ${c.validation} Evidence: ${c.sourceUrls.join("; ")}${c.ruleIds?` Rule identifiers: ${Object.entries(c.ruleIds).map(([k,v])=>`${k}: ${v}`).join("; ")}`:""}${c.query?`\nCandidate ${c.language||"rule"}:\n${c.query}`:""}`));

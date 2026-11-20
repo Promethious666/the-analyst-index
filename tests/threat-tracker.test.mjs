@@ -107,3 +107,13 @@ test("summary reports stay focused and retain control limitations",()=>{
   assert.match(content,/external response/);assert.match(content,/not independently|No independent/);
   assert.ok(docxFiles(report)["word/document.xml"].includes("Summary report"));
 });
+
+test("summary and technical reports carry newer KEV and dated EPSS evidence",()=>{
+  const current={...record,live:{kev:{listed:true,checkedAt:"2026-10-27T10:00:00Z"},epss:{score:0.42,date:"2026-10-27"}}};
+  for(const scope of ["brief","full","update"]){
+    const report=JSON.stringify(buildReport(current,snapshot,{scope}));
+    assert.match(report,/Listed as known exploited/);assert.match(report,/2026-10-27T10:00:00Z/);
+    assert.match(report,/42.00% predicted/);assert.match(report,/this is a prediction/);
+    assert.match(report,/cisa.gov/);assert.match(report,/first.org/);
+  }
+});
