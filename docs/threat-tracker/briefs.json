@@ -1,5 +1,28 @@
 {
   "schemaVersion": 1,
+  "watchCases": [
+    {
+      "id": "CVE-2026-114938",
+      "title": "Java4Shell in OpenJDK",
+      "kind": "Vulnerability",
+      "summary": "A flaw in the optimised Base64 decoder affects certain Java builds on x86-64 processors with AVX-512 VBMI. Identify the runtime distribution, full build and processor before deciding whether a deployment needs updating.",
+      "reports": [
+        {"publisher":"Red Hat","date":"2026-11-17","url":"https://access.redhat.com/security/vulnerabilities/RHSB-2026-018","summary":"Red Hat identifies a possible service crash or remote code execution when untrusted data reaches the affected decoder. It describes the CPU prerequisite and distinguishes ARM64 systems."},
+        {"publisher":"Eclipse Adoptium","date":"2026-11-18","url":"https://adoptium.net/news/2026/11/temurin-november-2026-cspu-java4shell/","summary":"Temurin lists fixed builds 17.0.21.1+2, 21.0.13.1+2, 25.0.5.1+2 and 27.0.1.1+4. Its JDK 8 and 11 builds are unaffected. The vendor also documents a temporary workaround."},
+        {"publisher":"Oracle Linux","date":"2026-11-19","url":"https://linux.oracle.com/errata/ELSA-2026-100567.html","summary":"Oracle issued a Java 21 OpenJDK package update for Oracle Linux 8 and 9. Use the erratum matching the installed distribution and package."}
+      ]
+    },
+    {
+      "id": "WFX-PHANTOM",
+      "title": "WFX Phantom in GitHub Actions",
+      "kind": "Supply chain incident",
+      "summary": "Two research teams describe stolen credentials being used to alter repositories and expose CI secrets. Review workflow history and the permissions of any credentials available to an affected job.",
+      "reports": [
+        {"publisher":"StepSecurity","date":"2026-11-12","url":"https://www.stepsecurity.io/blog/wfx-phantom-the-github-actions-secret-stealer","summary":"StepSecurity distinguishes an initial probe pull request from an executed workflow. That distinction matters when assessing whether a secret was exposed."},
+        {"publisher":"Endor Labs","date":"2026-11-13","url":"https://www.endorlabs.com/learn/github-actions-supply-chain-attack-targeting-ci-secrets-at-scale","summary":"Endor Labs updated its investigation of affected repositories and package changes. Its findings extend the review to downstream package consumers."}
+      ]
+    }
+  ],
   "monitors": [
     {
       "name": "Node.js security releases",

@@ -25,6 +25,8 @@ Open `http://localhost:8080/threat-tracker/` for local review. To collect curren
 
 ## Publishing and scheduled collection
 
+Daily incident briefs at `threat-tracker/daily.html` group public updates by UTC day and incident. The date and incident selectors also work in the downloaded preview. The first collection uses publisher dates. Later discoveries and revisions are recorded on the day the tracker observes them, with the original source date alongside. Each day's entries retain the information available then. The daily archive carries forward when advisories leave the discovery feeds. The same dated briefs are available as `daily-data.json`.
+
 The workflow checks public sources every four hours and deploys the complete `docs/` site, preserving the tool directory. Enable GitHub Actions as the repository's Pages publishing source before merging. The first merged push starts collection and deployment. GitHub's schedule is best effort and can be delayed or disabled after inactivity. Source health and last-success timestamps identify stale evidence.
 
 The previous deployed snapshot is retrieved before collection so that history survives between deployments. If it cannot be retrieved, the checked-in snapshot is used. Failed sources retain their earlier evidence and last-success timestamps. Neither a fetch nor a matching CVE identifier updates an analyst review date.

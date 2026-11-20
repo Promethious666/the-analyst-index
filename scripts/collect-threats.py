@@ -13,6 +13,7 @@ from email.utils import parsedate_to_datetime
 from urllib.error import HTTPError
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
+from review_inbox import collect_inbox, daily_archive, inbox_json
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "public" / "threat-tracker"
@@ -42,11 +43,10 @@ def request(url, *, expect_json=True, limit=12_000_000):
     if not https_url(url):
         raise ValueError("Only public HTTPS source URLs are supported")
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json" if expect_json else "text/html"}
+    req = Request(url, headers=headers)
     if urlparse(url).hostname == "api.github.com" and os.environ.get("GITHUB_TOKEN"):
-        headers["Authorization"] = "Bearer " + os.environ["GITHUB_TOKEN"]
-    with urlopen(Request(url, headers=headers), timeout=12) as response:
-        if headers.get("Authorization") and urlparse(response.url).hostname != "api.github.com":
-            raise ValueError("Unexpected authenticated-source redirect")
+        req.add_unredirected_header("Authorization", "Bearer " + os.environ["GITHUB_TOKEN"])
+    with urlopen(req, timeout=12) as response:
         payload = response.read(limit + 1)
         if len(payload) > limit:
             raise ValueError("Source response exceeded the collection limit")
@@ -371,6 +371,8 @@ def collect(briefs, previous=None, offline=False, fetch=request, now=None):
         automatic_events = [e for e in record["history"] if e not in reviewed_events]
         record["history"] = sorted([*reviewed_events,*automatic_events[-100:]],key=lambda e:e["at"])
     output["candidates"] = sorted(candidates.values(), key=lambda x: (x["firstSeen"], x["id"]), reverse=True)[:150]
+    output["inbox"] = collect_inbox(briefs, records, previous.get("inbox", []), kev, check, fetch, now)
+    output["daily"] = daily_archive(output["inbox"], previous.get("daily", {}))
     return output
 
 
@@ -391,9 +393,15 @@ def main():
             if deployed.get("schemaVersion") != 1 or not isinstance(deployed.get("records"), list):
                 raise ValueError("Invalid previous snapshot")
             previous = deployed
-        except Exception:
-            print("Previous deployment unavailable; using the checked-in snapshot.")
+        except HTTPError as error:
+            if error.code != 404:
+                raise
+            print("No previous deployment found; using the checked-in snapshot.")
     output = collect(briefs, previous, offline=args.offline)
+    template = (ROOT / "scripts" / "review-inbox.html").read_text(encoding="utf-8")
+    payload = inbox_json(output)
+    (SOURCE / "daily-data.json").write_text(payload + "\n", encoding="utf-8")
+    (SOURCE / "daily.html").write_text(template.replace("<!--PUBLIC_SNAPSHOT-->", payload), encoding="utf-8")
     data_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     target = ROOT / "docs" / "threat-tracker"
     target.mkdir(parents=True, exist_ok=True)
@@ -401,6 +409,8 @@ def main():
         if path.is_file():
             shutil.copy2(path, target / path.name)
     failed = sum(x["status"] == "error" for x in output["health"])
+    print(f"Daily incident briefs: {len(output['daily'])} days, {len(output['inbox'])} current incidents, "
+          f"{sum(len(item['reports']) for item in output['inbox'])} source reports.")
     print(f"Prepared {len(output['records'])} briefs, {len(output['candidates'])} review candidates; {failed} source checks failed.")
     for source in output["health"]:
         if source["status"] == "error":
