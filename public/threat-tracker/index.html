@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A simple dashboard for vulnerability updates, fixes, research and reports.">
+  <meta name="referrer" content="no-referrer">
+  <title>Vulnerability dashboard</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to vulnerabilities</a>
+  <header class="masthead">
+    <span class="site-name">Vulnerability tracker</span>
+    <nav aria-label="Main"><a href="../">Tool directory</a><button id="method-button" class="text-button">About the data</button></nav>
+  </header>
+  <main>
+    <section class="page-heading" aria-labelledby="page-title">
+      <div><h1 id="page-title">Dashboard</h1><p>Choose a vulnerability to see the latest information or download a report.</p></div>
+      <a class="update-status" href="#health"><strong id="freshness">Loading data</strong><span id="collection-detail"></span></a>
+    </section>
+    <section class="stats" aria-label="Overview" id="stats"></section>
+    <section class="toolbar" aria-label="Filter vulnerabilities">
+      <div class="search-control"><label for="search">Search</label><input id="search" type="search" placeholder="Search by CVE, product or keyword" autocomplete="off"></div>
+      <div><label for="product">Product</label><select id="product"><option value="">All products</option></select></div>
+      <div><label for="scope">Show</label><select id="scope"><option value="all">All vulnerabilities</option><option value="followed">Following</option><option value="changed">Changed since last visit</option></select></div>
+      <button id="reset-filters" class="quiet-button">Reset</button>
+    </section>
+    <section class="workspace" id="workspace">
+      <aside class="finder" aria-label="Vulnerabilities">
+        <div class="list-heading"><h2>Vulnerabilities</h2><span id="result-count"></span></div>
+        <div id="records" class="record-list" aria-live="polite"></div>
+        <p class="small">Following is saved on this device.</p>
+      </aside>
+      <article id="brief" class="brief" aria-label="Selected vulnerability"><p class="empty">Loading vulnerabilities...</p></article>
+    </section>
+    <section class="lower-grid">
+      <details class="panel" id="review"><summary><span>New CVEs to review</span><span id="candidate-count" class="count">0</span></summary><div class="panel-content"><p>These were mentioned by a monitored vendor. Any connection to the tracked vulnerabilities still needs checking.</p><div id="candidates"></div></div></details>
+      <details class="panel" id="health"><summary><span>Data sources</span><span id="health-count" class="count"></span></summary><div class="panel-content"><p>These checks collect new information. The date each technical brief was reviewed is shown separately.</p><div id="health-list"></div></div></details>
+    </section>
+  </main>
+  <footer><a href="https://github.com/Promethious666/the-analyst-index" target="_blank" rel="noopener noreferrer">Project on GitHub</a><button id="clear-local" class="text-button">Clear saved preferences</button></footer>
+  <dialog id="report-dialog" aria-labelledby="report-title">
+    <form method="dialog" class="dialog-head"><h2 id="report-title">Download report</h2><button class="icon-button" aria-label="Close report options">Close</button></form>
+    <p id="report-description">Use the information currently shown on the dashboard.</p>
+    <label for="report-scope">Include</label><select id="report-scope"><option value="full">Full report</option><option value="update">Changes since my previous export</option></select>
+    <label for="report-author">Prepared by (optional)</label><input id="report-author" maxlength="100" placeholder="Your name">
+    <p class="small">This name is included in your download only.</p>
+    <div class="report-actions"><button id="export-word" class="primary-button">Download Word</button><button id="export-pdf" class="quiet-button">Print / save PDF</button></div>
+    <p id="report-feedback" class="small" role="status"></p>
+  </dialog>
+  <dialog id="method-dialog" aria-labelledby="method-title">
+    <form method="dialog" class="dialog-head"><h2 id="method-title">About the data</h2><button class="icon-button" aria-label="Close data information">Close</button></form>
+    <p>The dashboard combines reviewed technical notes with automatically collected information from public sources.</p>
+    <p>New repository links and rules need checking. A link mentioning a CVE does not prove that an exploit works or that a rule will stop it.</p>
+    <p>If a source cannot be reached, its earlier information is kept. Data sources shows when each check last succeeded.</p>
+    <p>Reports include the sources, review dates and any collection problems. They do not assess exposure in your own environment.</p>
+    <p>Your followed vulnerabilities and report history are saved in this browser. You do not need an account.</p>
+  </dialog>
+  <p id="notice" class="notice" role="status" hidden></p>
+</body>
+</html>

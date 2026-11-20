@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-26T20:19:07Z",
+  "records": [
+    {
+      "id": "CVE-2026-111497",
+      "title": "Node2Shell: Brotli decoder memory corruption",
+      "product": "Node.js",
+      "severity": "High",
+      "severityBasis": "Node.js vendor rating",
+      "reviewedAt": "2026-10-26",
+      "summary": "Malformed Brotli data can corrupt process memory when a vulnerable application decompresses it. Node.js released fixes for the supported 22, 24 and 26 release lines.",
+      "technical": "An invalid block switch is treated as a temporary need for more input. The streaming decoder can keep appending bytes beyond an internal buffer. The application must pass attacker-controlled Brotli data to the affected decoder.",
+      "requirements": [
+        "A vulnerable Brotli decoder must be present in the deployed runtime or dependency.",
+        "The application must decompress attacker-controlled Brotli data. Inspect request-body middleware and fetched external responses.",
+        "A version match identifies an investigation candidate; it does not establish that an exploitable data path exists."
+      ],
+      "affected": [
+        {
+          "product": "Node.js 22",
+          "range": "22.x before 22.23.4",
+          "fixed": "22.23.4 or later supported release"
+        },
+        {
+          "product": "Node.js 24",
+          "range": "24.x before 24.22.1",
+          "fixed": "24.22.1 or later supported release"
+        },
+        {
+          "product": "Node.js 26",
+          "range": "26.x before 26.12.1",
+          "fixed": "26.12.1 or later supported release"
+        },
+        {
+          "product": "Legacy runtimes and other Brotli consumers",
+          "range": "Assess separately using the relevant vendor advisory",
+          "fixed": "Supported vendor update; do not infer a fix from the application version alone"
+        }
+      ],
+      "exploitation": {
+        "status": "Researcher-demonstrated RCE",
+        "detail": "Imperva reports code execution against an official Node.js 24.22.0 Linux arm64 image and rejection of the same inputs by 24.22.1. This tracker has not reproduced the exploit. This report does not establish exploitation in the wild.",
+        "sourceIds": [
+          "node-advisory",
+          "imperva-research"
+        ]
+      },
+      "nextAction": "Identify the runtime inside each deployed host, image and function, then confirm whether request or response processing can decompress untrusted Brotli data. Upgrade affected deployments.",
+      "mitigations": [
+        {
+          "action": "Update the affected runtime and rebuild deployed images.",
+          "coverage": "Repairs the bundled decoder when the vendor fix is included. Verify the runtime actually used by each workload.",
+          "limitation": "A host inventory can miss bundled runtimes, containers and managed functions."
+        },
+        {
+          "action": "Temporarily restrict untrusted Brotli data on affected paths.",
+          "coverage": "Can reduce access to a particular decoder entry point while updates are deployed.",
+          "limitation": "An ingress rule matching Content-Encoding: br does not by itself protect a service decompressing a response fetched from another server. Test application compatibility."
+        }
+      ],
+      "iocs": [],
+      "detections": [
+        {
+          "title": "Defender vulnerability inventory",
+          "status": "Investigation query; not a prevention rule",
+          "requirements": "Microsoft Defender XDR Advanced Hunting and populated DeviceTvmSoftwareVulnerabilities data.",
+          "limitation": "Only shows inventory where Defender has mapped this CVE. Empty results do not establish absence of affected runtimes or exposure.",
+          "query": "DeviceTvmSoftwareVulnerabilities\n| where CveId == \"CVE-2026-111497\"\n| project DeviceName, SoftwareName, SoftwareVersion, CveId, VulnerabilitySeverityLevel\n| order by DeviceName asc"
+        },
+        {
+          "title": "Application decompression and process telemetry",
+          "status": "Hunting guidance; untested",
+          "requirements": "Runtime version evidence, application logs, process telemetry and relevant HTTP metadata.",
+          "limitation": "Crashes, decoder errors or unexpected child processes require context. These signals alone cannot attribute activity to this CVE."
+        }
+      ],
+      "related": [
+        {
+          "id": "PHP Windows Brotli rebuilds",
+          "relationship": "PHP's 26 October advisory addresses the same Brotli CVE in Windows cURL dependencies. This is a shared component, not evidence of an exploit chain with PHP session vulnerabilities.",
+          "source": "https://www.php.net/archive/2026.php"
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-21",
+          "title": "Node.js security releases published",
+          "detail": "Vendor fixes released for the supported 22, 24 and 26 branches.",
+          "url": "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases"
+        },
+        {
+          "at": "2026-10-22",
+          "title": "Researcher publishes exploitation analysis",
+          "detail": "Imperva describes request and external-response attack paths and researcher-demonstrated code execution.",
+          "url": "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/"
+        },
+        {
+          "at": "2026-10-26",
+          "title": "PHP Windows dependency rebuilds announced",
+          "detail": "PHP reports updated Windows packages containing Brotli 1.2.1, exposing a related dependency investigation path.",
+          "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+        }
+      ],
+      "sources": [
+        {
+          "id": "node-advisory",
+          "title": "October 2026 Node.js security releases",
+          "publisher": "Node.js Project",
+          "type": "Vendor advisory",
+          "url": "https://nodejs.org/en/blog/vulnerability/october-2026-security-releases",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "imperva-research",
+          "title": "Node2Shell: From Brotli Data to Remote Code Execution",
+          "publisher": "Imperva Threat Research",
+          "type": "Researcher report",
+          "url": "https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "php-brotli",
+          "title": "Updated PHP Windows builds for Brotli security fix",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://www.php.net/archive/2026.php",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "defender-table",
+          "title": "DeviceTvmSoftwareVulnerabilities table",
+          "publisher": "Microsoft",
+          "type": "Schema documentation",
+          "url": "https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicetvmsoftwarevulnerabilities-table",
+          "reviewedAt": "2026-10-26"
+        }
+      ],
+      "fixStatus": "Available",
+      "live": {
+        "leads": []
+      },
+      "revision": "a457b47835125519fdeb"
+    },
+    {
+      "id": "CVE-2026-109618",
+      "title": "PHP2Shell: out-of-memory request corruption",
+      "product": "PHP",
+      "severity": "Critical",
+      "severityBasis": "PHP vendor advisory",
+      "reviewedAt": "2026-10-26",
+      "summary": "PHP request initialisation and cleanup can mishandle partially initialised data after an out-of-memory interruption. The vendor describes a risk of unauthenticated remote code execution.",
+      "technical": "An allocation failure can interrupt PHP while request data is partially initialised. Cleanup can subsequently treat invalid internal data as valid. The vendor highlights mod_php as the highest-risk configuration and advises updating all PHP web-serving installations.",
+      "requirements": [
+        "An affected PHP build serving web requests.",
+        "An attacker-reachable allocation failure and the affected initialisation or cleanup path.",
+        "Assess the SAPI, package provenance, backported fixes and deployed worker version."
+      ],
+      "affected": [
+        {
+          "product": "Supported PHP branches",
+          "range": "Affected releases before the 21 October fixes",
+          "fixed": "8.2.35, 8.3.36, 8.4.27 or 8.5.12, or a vendor-confirmed backport"
+        },
+        {
+          "product": "PHP 8.1 and older",
+          "range": "Upstream end of life; assess vendor support",
+          "fixed": "Supported upgrade or independently confirmed vendor backport"
+        }
+      ],
+      "exploitation": {
+        "status": "Vendor reports demonstrated exploit",
+        "detail": "PHP reports a demonstrated unauthenticated mod_php attack path before application code runs. This tracker has not reproduced it or established exploitation in the wild.",
+        "sourceIds": [
+          "php-news",
+          "php-ghsa"
+        ]
+      },
+      "nextAction": "Inventory deployed PHP web runtimes and SAPI configurations. Confirm the fixed package or a vendor-confirmed backport and restart the affected workers.",
+      "mitigations": [
+        {
+          "action": "Install the vendor security update and restart affected workers.",
+          "coverage": "Repairs the affected PHP code paths when the correct fixed build is deployed.",
+          "limitation": "Configuration workarounds do not establish complete remediation. Check vendor backports rather than relying on upstream version comparison alone."
+        },
+        {
+          "action": "Review the vendor's temporary memory and request-limit guidance.",
+          "coverage": "The advisory describes ways to reduce particular allocation-failure and request-processing paths.",
+          "limitation": "These settings have availability trade-offs and do not eliminate every allocation failure. Read the full vendor guidance before changing production limits."
+        }
+      ],
+      "iocs": [],
+      "detections": [
+        {
+          "title": "Runtime and request-processing investigation",
+          "status": "Hunting guidance; untested",
+          "requirements": "PHP package evidence, SAPI configuration, worker lifecycle and web/application logs.",
+          "limitation": "Out-of-memory events and worker crashes are not CVE-specific indicators. Correlate with request context and the affected runtime."
+        }
+      ],
+      "related": [
+        {
+          "id": "CVE-2026-109619",
+          "relationship": "Published in the same PHP security release. It has a separate stale-state mechanism and different mitigation coverage.",
+          "source": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "id": "CVE-2026-115560",
+          "relationship": "A later session-upload-progress issue with separate configuration prerequisites. Do not assume the 21 October patches cover it.",
+          "source": "https://www.php.net/archive/2026.php"
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-21",
+          "title": "PHP security releases and mitigation guidance published",
+          "detail": "Fixed builds announced for PHP 8.2, 8.3, 8.4 and 8.5.",
+          "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+        }
+      ],
+      "sources": [
+        {
+          "id": "php-news",
+          "title": "PHP critical security advisory, 21 October 2026",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://www.php.net/archive/2026.php",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "php-ghsa",
+          "title": "PHP security advisory GHSA-w8hw-w9fx-j79w",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w",
+          "reviewedAt": "2026-10-26"
+        }
+      ],
+      "fixStatus": "Available",
+      "live": {
+        "leads": []
+      },
+      "revision": "9c0ea5f8f2d718ece4b6"
+    },
+    {
+      "id": "CVE-2026-109619",
+      "title": "PHP2Shell: stale state across requests",
+      "product": "PHP",
+      "severity": "Critical",
+      "severityBasis": "PHP vendor advisory",
+      "reviewedAt": "2026-10-26",
+      "summary": "Request-owned PHP state can outlive its backing memory. A later request in the same worker can use that stale state before normal initialisation resets it.",
+      "technical": "State retained across worker requests can be accessed after its original memory has been freed. PHP identifies confirmed session and fatal-backtrace paths, while warning that configuration workarounds do not cover every variant.",
+      "requirements": [
+        "An affected PHP web-serving build and the relevant request lifecycle.",
+        "Reuse of an affected worker and an attacker-reachable stale-state path.",
+        "Confirm the SAPI, session configuration, worker restart and vendor fix status."
+      ],
+      "affected": [
+        {
+          "product": "Supported PHP branches",
+          "range": "Affected releases before the 21 October fixes",
+          "fixed": "8.2.35, 8.3.36, 8.4.27 or 8.5.12, or a vendor-confirmed backport"
+        },
+        {
+          "product": "PHP 8.1 and older",
+          "range": "Upstream end of life; assess vendor support",
+          "fixed": "Supported upgrade or vendor-confirmed backport"
+        }
+      ],
+      "exploitation": {
+        "status": "Vendor-documented RCE paths",
+        "detail": "The vendor advisory describes critical RCE and confirmed session and fatal-backtrace paths. This tracker does not establish a reliable public PoC or exploitation in the wild.",
+        "sourceIds": [
+          "php-news",
+          "php-ghsa"
+        ]
+      },
+      "nextAction": "Confirm that deployed PHP workers use a fixed build. Where temporary session controls are used, verify that they apply before request parsing and restart every worker.",
+      "mitigations": [
+        {
+          "action": "Install the security update and restart every affected worker.",
+          "coverage": "Repairs the affected stale-state code paths in the fixed vendor build.",
+          "limitation": "A changed package on disk does not establish that long-running workers have restarted."
+        },
+        {
+          "action": "Set session.upload_progress.enabled=0 before request parsing.",
+          "coverage": "Blocks the confirmed session paths described by PHP.",
+          "limitation": "Does not cover every variant. PHP advises against relying on ini_set() or FPM .user.ini for this mitigation."
+        },
+        {
+          "action": "Review fatal_error_backtraces and request-initialisation diagnostics.",
+          "coverage": "PHP lists additional path-specific measures, including fatal_error_backtraces=0 on PHP 8.5.",
+          "limitation": "These are partial measures. The full vendor advisory is required to assess applicability."
+        }
+      ],
+      "iocs": [],
+      "detections": [
+        {
+          "title": "Session configuration and worker investigation",
+          "status": "Hunting guidance; untested",
+          "requirements": "Effective PHP configuration, worker versions and web/application logs.",
+          "limitation": "Configuration evidence is an exposure check. It is not evidence that exploitation occurred."
+        }
+      ],
+      "related": [
+        {
+          "id": "CVE-2026-109618",
+          "relationship": "Same security release; separate out-of-memory corruption mechanism.",
+          "source": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "id": "CVE-2026-115560",
+          "relationship": "Shares a session-upload-progress mitigation for a confirmed path, but has different prerequisites and a separate release timetable.",
+          "source": "https://www.php.net/archive/2026.php"
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-21",
+          "title": "PHP publishes fixes and path-specific mitigations",
+          "detail": "PHP distinguishes full remediation by update from partial configuration measures.",
+          "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+        }
+      ],
+      "sources": [
+        {
+          "id": "php-news",
+          "title": "PHP critical security advisory, 21 October 2026",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://www.php.net/archive/2026.php",
+          "reviewedAt": "2026-10-26"
+        },
+        {
+          "id": "php-ghsa",
+          "title": "PHP security advisory GHSA-6wmf-4rv5-p3rp",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://github.com/php/php-src/security/advisories/GHSA-6wmf-4rv5-p3rp",
+          "reviewedAt": "2026-10-26"
+        }
+      ],
+      "fixStatus": "Available",
+      "live": {
+        "leads": []
+      },
+      "revision": "d51d4d5e9acaa498938b"
+    },
+    {
+      "id": "CVE-2026-115560",
+      "title": "PHP session handler switching RCE vector",
+      "product": "PHP",
+      "severity": "Not established",
+      "severityBasis": "Informational vendor advisory; no severity inferred",
+      "reviewedAt": "2026-10-26",
+      "summary": "PHP describes a separate, unlikely RCE vector involving runtime changes to the session serialisation handler while session upload progress remains enabled.",
+      "technical": "The application must configure php_binary or php_serialize, then switch to php at runtime with ini_set() before session_start(). Session upload progress must still be enabled. PHP plans a full advisory with the next regular bugfix release.",
+      "requirements": [
+        "session.serialize_handler initially set to php_binary or php_serialize.",
+        "Application code switches the handler to php using ini_set() before session_start().",
+        "Session upload progress remains enabled."
+      ],
+      "affected": [
+        {
+          "product": "PHP session handling",
+          "range": "Exact affected-version range not established by the informational notice",
+          "fixed": "Full advisory and fixed release pending as of the reviewed notice; recheck the vendor before relying on this status"
+        }
+      ],
+      "exploitation": {
+        "status": "Vendor-described conditional RCE vector",
+        "detail": "PHP calls the required configuration unusual. The informational notice does not establish exploitation in the wild or a public working PoC.",
+        "sourceIds": [
+          "php-news"
+        ]
+      },
+      "nextAction": "Review session serialisation configuration and runtime handler changes. Apply the vendor's temporary session-upload-progress measure where applicable, then recheck the next PHP bugfix release.",
+      "mitigations": [
+        {
+          "action": "Set session.upload_progress.enabled=0 until the vendor fix is applied.",
+          "coverage": "PHP states this fully protects against the vector described in its 23 October informational notice.",
+          "limitation": "Verify effective configuration. This statement does not establish complete protection against the separate PHP2Shell vulnerabilities."
+        },
+        {
+          "action": "Check whether the application ever changes the serialisation handler at runtime.",
+          "coverage": "PHP says applications that never change the handler at runtime can keep session upload progress enabled for this issue.",
+          "limitation": "Requires application-code and configuration evidence; do not infer this from an inventory scan."
+        }
+      ],
+      "iocs": [],
+      "detections": [
+        {
+          "title": "Session handler configuration review",
+          "status": "Exposure review; not an exploitation detector",
+          "requirements": "Application-code review and effective PHP session settings.",
+          "limitation": "No tested CVE-specific detection or blocking rule is included in this brief."
+        }
+      ],
+      "related": [
+        {
+          "id": "CVE-2026-109619",
+          "relationship": "The same session-upload-progress setting was already a partial mitigation for confirmed session paths in the earlier issue. Shared mitigation does not mean an identical flaw or identical patch coverage.",
+          "source": "https://www.php.net/archive/2026.php"
+        }
+      ],
+      "history": [
+        {
+          "at": "2026-10-23",
+          "title": "Informational PHP advisory published",
+          "detail": "PHP describes the prerequisites, temporary mitigation and planned regular-release handling.",
+          "url": "https://www.php.net/archive/2026.php"
+        },
+        {
+          "at": "2026-10-26T20:19:07Z",
+          "title": "Reviewed technical brief changed",
+          "detail": "The published technical assessment was updated; inspect the current brief and sources."
+        }
+      ],
+      "sources": [
+        {
+          "id": "php-news",
+          "title": "Informational advisory: Session upload progress",
+          "publisher": "PHP Project",
+          "type": "Vendor advisory",
+          "url": "https://www.php.net/archive/2026.php",
+          "reviewedAt": "2026-10-26"
+        }
+      ],
+      "fixStatus": "Pending",
+      "live": {
+        "leads": []
+      },
+      "revision": "79acf0c4810d109e7395"
+    }
+  ],
+  "health": [
+    {
+      "name": "CISA KEV",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "FIRST EPSS",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "projectdiscovery/nuclei-templates",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "SigmaHQ/sigma",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CVE record: CVE-2026-111497",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Repository leads: CVE-2026-111497",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CVE record: CVE-2026-109618",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Repository leads: CVE-2026-109618",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CVE record: CVE-2026-109619",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Repository leads: CVE-2026-109619",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "CVE record: CVE-2026-115560",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Repository leads: CVE-2026-115560",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "Node.js security releases",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    },
+    {
+      "name": "PHP security news",
+      "status": "pending",
+      "checkedAt": null,
+      "lastSuccess": null
+    }
+  ],
+  "candidates": []
+}
