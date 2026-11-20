@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import re
 import shutil
-import sys
 from datetime import datetime, timezone
 from urllib.error import HTTPError
 from urllib.parse import quote, urlencode, urlparse
@@ -269,6 +268,9 @@ def main():
             shutil.copy2(path, target / path.name)
     failed = sum(x["status"] == "error" for x in output["health"])
     print(f"Prepared {len(output['records'])} briefs, {len(output['candidates'])} review candidates; {failed} source checks failed.")
+    for source in output["health"]:
+        if source["status"] == "error":
+            print(f"Source unavailable: {source['name']} ({source['error']})")
 
 
 if __name__ == "__main__":
