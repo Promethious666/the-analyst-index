@@ -10,6 +10,8 @@ on:
       - "public/threat-tracker/**"
       - "docs/**"
       - "scripts/collect-threats.py"
+      - "scripts/review_inbox.py"
+      - "scripts/review-inbox.html"
       - "tests/*threat*"
       - ".github/workflows/threat-tracker.yml"
   pull_request:
@@ -17,6 +19,8 @@ on:
       - "public/threat-tracker/**"
       - "docs/threat-tracker/**"
       - "scripts/collect-threats.py"
+      - "scripts/review_inbox.py"
+      - "scripts/review-inbox.html"
       - "tests/*threat*"
       - ".github/workflows/threat-tracker.yml"
 

@@ -1,11 +1,13 @@
 import copy
 import importlib.util
 import json
+import sys
 from pathlib import Path
 import unittest
 from urllib.error import HTTPError
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 spec = importlib.util.spec_from_file_location("collector", ROOT / "scripts" / "collect-threats.py")
 collector = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(collector)
@@ -14,6 +16,10 @@ NOW = "2026-10-26T12:00:00Z"
 
 
 def fixture_fetch(url, **kwargs):
+    if "api.github.com/advisories?" in url:
+        return []
+    if any(url == report["url"] for item in BRIEFS.get("watchCases", []) for report in item["reports"]):
+        return "<main>" + "Reviewed source text. " * 10 + "</main>"
     if "known_exploited" in url:
         return {"vulnerabilities": [{"cveID": BRIEFS["records"][0]["id"], "dateAdded": "2026-10-26"}]}
     if "api.first.org" in url:
@@ -35,6 +41,45 @@ def fixture_fetch(url, **kwargs):
 
 
 class CollectorTests(unittest.TestCase):
+    def test_inbox_groups_sources_and_keeps_changes_through_an_outage(self):
+        key = BRIEFS["watchCases"][0]["id"]
+        ghsa = "GHSA-abcd-2345-6789"
+        advice = {"ghsa_id": ghsa, "cve_id": key, "summary": "Vendor alert", "updated_at": NOW,
+                  "vulnerabilities": [{"package": {"name": "example"}, "vulnerable_version_range": "<2"}]}
+        def source(url, **kwargs):
+            if "known_exploited" in url:
+                return {"vulnerabilities": [{"cveID":key, "dateAdded":NOW[:10], "vulnerabilityName":"Example"}]}
+            if "type=reviewed" in url:
+                return [advice]
+            return fixture_fetch(url, **kwargs)
+        def item(data):
+            return next(x for x in data["inbox"] if x["id"] == key)
+        first = collector.collect(BRIEFS, fetch=source, now=NOW)
+        self.assertTrue({"CISA KEV","GitHub Advisory Database","Red Hat"}.issubset(
+            {r["publisher"] for r in item(first)["reports"].values()}))
+        self.assertEqual(sum(x["id"] == key for x in first["inbox"]),1)
+        later = "2026-10-26T16:00:00Z"
+        advice["updated_at"] = later
+        stable = collector.collect(BRIEFS, previous=first, fetch=source, now=later)
+        self.assertEqual(item(first)["revision"],item(stable)["revision"])
+        advice["vulnerabilities"][0]["first_patched_version"] = "2.0"
+        updated = collector.collect(BRIEFS, previous=stable, fetch=source, now=later)
+        self.assertIn("fixed in 2.0", item(updated)["history"][-1]["text"])
+        def outage(url, **kwargs):
+            raise TimeoutError()
+        failed = collector.collect(BRIEFS, previous=updated, fetch=outage, now=later)
+        self.assertEqual(item(updated)["revision"], item(failed)["revision"])
+        self.assertEqual(item(updated)["reports"], item(failed)["reports"])
+
+    def test_inbox_retains_incidents_without_cves_and_escapes_embedded_json(self):
+        value = collector.collect(BRIEFS, offline=True, now=NOW)
+        incident = next(x for x in value["inbox"] if x["id"] == "WFX-PHANTOM")
+        self.assertEqual(len(incident["reports"]), 2)
+        incident["title"] = "</script><i>untrusted</i>"
+        html = collector.render_inbox("<!--PUBLIC_SNAPSHOT-->", value)
+        self.assertNotIn("</script>", html)
+        self.assertTrue(any(x["title"]==incident["title"] for x in json.loads(html)["items"]))
+
     def test_new_references_are_unreviewed_and_new_cves_are_quarantined(self):
         value = collector.collect(BRIEFS, fetch=fixture_fetch, now=NOW)
         self.assertEqual(value["records"][0]["live"]["leads"][0]["reviewStatus"], "Unreviewed")
